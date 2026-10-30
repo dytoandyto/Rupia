@@ -99,25 +99,7 @@ cd AplikasiKeuanganRupia
 npm install
 ```
 
-### 2. Konfigurasi Lingkungan (.env)
-Salin `.env.example` ke `.env`:
-```bash
-cp .env.example .env
-```
-Isi konfigurasi pada file `.env`:
-```env
-# Database URL (Default SQLite lokal tanpa instalasi apapun)
-DATABASE_URL="file:./dev.db"
 
-# Atau jika menggunakan PostgreSQL produksi:
-# DATABASE_URL="postgresql://user:password@localhost:5432/rupia?schema=public"
-
-JWT_SECRET="rupia-mobile-v2-super-secret-jwt-key-indonesia-2026-strict"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Opsional: Google Gemini API Key untuk Rupia AI (memiliki deterministic fallback jika kosong)
-GEMINI_API_KEY=""
-```
 
 ### 3. Sinkronisasi Database & Seed Akun Demo
 Jalankan sinkronisasi schema database:
