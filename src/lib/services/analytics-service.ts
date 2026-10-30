@@ -43,6 +43,17 @@ export interface AnalyticsReport {
     date: Date;
     categoryName?: string;
   }[];
+  priorityBreakdown: {
+    essential: number;
+    essentialPercentage: number;
+    discretionary: number;
+    discretionaryPercentage: number;
+  };
+  transportAndToll: {
+    total: number;
+    tripCount: number;
+    percentageOfExpenses: number;
+  };
 }
 
 export class AnalyticsService {
@@ -60,7 +71,7 @@ export class AnalyticsService {
         isVoided: false,
         date: { gte: currentStart, lte: currentEnd },
       },
-      include: { category: true },
+      include: { category: true, wallet: true },
       orderBy: { date: 'asc' },
     });
 
@@ -79,6 +90,11 @@ export class AnalyticsService {
 
     let currentIncome = 0n;
     let currentExpenses = 0n;
+    let essentialExpenses = 0n;
+    let discretionaryExpenses = 0n;
+    let transportTotal = 0n;
+    let transportCount = 0;
+
     const catMap = new Map<string, { id: string; name: string; color: string; icon: string; amount: bigint }>();
     const dayMap = new Map<string, { expense: bigint; income: bigint }>();
 
@@ -87,6 +103,28 @@ export class AnalyticsService {
         currentIncome += tx.amount;
       } else if (tx.type === 'EXPENSE') {
         currentExpenses += tx.amount;
+
+        if (tx.isEssential !== false) {
+          essentialExpenses += tx.amount;
+        } else {
+          discretionaryExpenses += tx.amount;
+        }
+
+        const desc = (tx.description || '').toLowerCase();
+        const catName = (tx.category?.name || '').toLowerCase();
+        if (
+          catName.includes('transport') ||
+          catName.includes('tol') ||
+          catName.includes('parkir') ||
+          desc.includes('tol') ||
+          desc.includes('parkir') ||
+          desc.includes('krl') ||
+          desc.includes('mrt') ||
+          tx.wallet?.type === 'EMONEY'
+        ) {
+          transportTotal += tx.amount;
+          transportCount++;
+        }
 
         const catId = tx.categoryId || 'uncategorized';
         const existing = catMap.get(catId) || {
@@ -100,12 +138,12 @@ export class AnalyticsService {
         catMap.set(catId, existing);
       }
 
-      // Daily trend mapping
+      // Group daily trend
       const dateKey = tx.date.toISOString().split('T')[0];
-      const dayData = dayMap.get(dateKey) || { expense: 0n, income: 0n };
-      if (tx.type === 'EXPENSE') dayData.expense += tx.amount;
-      if (tx.type === 'INCOME') dayData.income += tx.amount;
-      dayMap.set(dateKey, dayData);
+      const dayEntry = dayMap.get(dateKey) || { expense: 0n, income: 0n };
+      if (tx.type === 'EXPENSE') dayEntry.expense += tx.amount;
+      if (tx.type === 'INCOME') dayEntry.income += tx.amount;
+      dayMap.set(dateKey, dayEntry);
     }
 
     let prevIncome = 0n;
@@ -117,25 +155,23 @@ export class AnalyticsService {
 
     const curIncNum = Number(currentIncome);
     const curExpNum = Number(currentExpenses);
-    const curNet = curIncNum - curExpNum;
-
     const prevIncNum = Number(prevIncome);
     const prevExpNum = Number(prevExpenses);
+
+    const curNet = curIncNum - curExpNum;
     const prevNet = prevIncNum - prevExpNum;
 
-    // Ratios with zero denominator protection
-    const expenseToIncomeRatio = curIncNum > 0 ? Math.round((curExpNum / curIncNum) * 100) : 0;
-    const savingsContributionRatio = curIncNum > 0 ? Math.max(0, Math.round((curNet / curIncNum) * 100)) : 0;
+    const expenseToIncomeRatio = curIncNum > 0 ? Math.min(100, Math.round((curExpNum / curIncNum) * 100)) : 0;
+    const savingsContributionRatio = curIncNum > 0 && curNet > 0 ? Math.round((curNet / curIncNum) * 100) : 0;
 
-    const daysElapsed = Math.max(1, Math.min(targetDate.getDate(), currentEnd.getDate()));
-    const dailyAverageExpense = Math.round(curExpNum / daysElapsed);
+    const daysPassedInMonth = Math.max(1, targetDate.getDate());
+    const dailyAverageExpense = Math.round(curExpNum / daysPassedInMonth);
 
-    let expenseChangePercentage = 0;
-    if (prevExpNum > 0) {
-      expenseChangePercentage = Math.round(((curExpNum - prevExpNum) / prevExpNum) * 100);
-    }
+    const expenseChangePercentage = prevExpNum > 0
+      ? Math.round(((curExpNum - prevExpNum) / prevExpNum) * 100)
+      : 0;
 
-    // Categories sorted by amount desc
+    // Categories array with percentages
     const categories: CategoryBreakdown[] = Array.from(catMap.values())
       .map((c) => ({
         id: c.id,
@@ -176,6 +212,10 @@ export class AnalyticsService {
         categoryName: t.category?.name,
       }));
 
+    const essNum = Number(essentialExpenses);
+    const discNum = Number(discretionaryExpenses);
+    const transNum = Number(transportTotal);
+
     return {
       currentPeriod: {
         startDate: currentStart,
@@ -196,7 +236,17 @@ export class AnalyticsService {
       categories,
       dailyTrend,
       largestExpenses,
+      priorityBreakdown: {
+        essential: essNum,
+        essentialPercentage: curExpNum > 0 ? Math.round((essNum / curExpNum) * 100) : 0,
+        discretionary: discNum,
+        discretionaryPercentage: curExpNum > 0 ? Math.round((discNum / curExpNum) * 100) : 0,
+      },
+      transportAndToll: {
+        total: transNum,
+        tripCount: transportCount,
+        percentageOfExpenses: curExpNum > 0 ? Math.round((transNum / curExpNum) * 100) : 0,
+      },
     };
   }
 }
-

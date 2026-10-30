@@ -47,6 +47,15 @@ export default function WalletCarousel({ wallets, onWalletReconciled }: WalletCa
           iconBg: 'bg-primary-container/15 text-primary-container',
           tagClass: 'text-primary font-semibold',
         };
+      case 'EMONEY':
+        return {
+          icon: 'credit_card',
+          initials: 'E-M',
+          tag: 'Kartu',
+          subtext: 'Uang Elektronik',
+          iconBg: 'bg-emerald-500/15 text-primary',
+          tagClass: 'text-primary font-semibold',
+        };
       case 'CASH':
         return {
           icon: 'payments',
@@ -55,6 +64,15 @@ export default function WalletCarousel({ wallets, onWalletReconciled }: WalletCa
           subtext: 'Fisik di Dompet',
           iconBg: 'bg-surface-container text-secondary',
           tagClass: 'text-on-surface-variant',
+        };
+      case 'SAVINGS':
+        return {
+          icon: 'savings',
+          initials: 'TAB',
+          tag: 'Simpanan',
+          subtext: 'Tabungan Khusus',
+          iconBg: 'bg-purple-500/15 text-purple-700',
+          tagClass: 'text-purple-700 font-semibold',
         };
       case 'INVESTMENT':
         return {

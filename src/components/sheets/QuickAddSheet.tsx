@@ -30,6 +30,7 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
   const [selectedWalletId, setSelectedWalletId] = useState('');
   const [selectedDestinationWalletId, setSelectedDestinationWalletId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [isEssential, setIsEssential] = useState(true);
   const [naturalText, setNaturalText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
@@ -184,6 +185,7 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
               type: activeTab,
               amount: currentAmount,
               description: description || (activeTab === 'EXPENSE' ? 'Pengeluaran' : 'Pemasukan'),
+              isEssential: activeTab === 'EXPENSE' ? isEssential : true,
               date: new Date().toISOString(),
             }),
           });
@@ -395,6 +397,37 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
                           {c.name}
                         </button>
                       ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Essential vs Discretionary Tag for Expenses */}
+              {activeTab === 'EXPENSE' && (
+                <div className="flex items-center justify-between bg-surface-container-low px-3 py-1.5 rounded-xl border border-surface-variant/30 text-xs">
+                  <span className="text-[11px] text-on-surface-variant font-medium">Prioritas:</span>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsEssential(true)}
+                      className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                        isEssential
+                          ? 'bg-primary-container text-white shadow-xs'
+                          : 'text-on-surface-variant hover:text-on-surface'
+                      }`}
+                    >
+                      Kebutuhan (Primer)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEssential(false)}
+                      className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                        !isEssential
+                          ? 'bg-tertiary-container text-white shadow-xs'
+                          : 'text-on-surface-variant hover:text-on-surface'
+                      }`}
+                    >
+                      Keinginan
+                    </button>
                   </div>
                 </div>
               )}

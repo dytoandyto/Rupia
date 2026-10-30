@@ -2,11 +2,14 @@ import prisma from '../db';
 
 export interface CreateWalletInput {
   name: string;
-  type: 'BANK' | 'EWALLET' | 'CASH' | 'INVESTMENT' | 'OTHER';
+  type: 'BANK' | 'EWALLET' | 'EMONEY' | 'CASH' | 'SAVINGS' | 'INVESTMENT' | 'OTHER';
+  issuer?: string; // MANDIRI, BCA, BRI, BNI, OTHER
+  cardLast4?: string;
   accountNo?: string;
   color?: string;
   icon?: string;
   openingBalance: bigint;
+  lastBalanceSource?: string;
 }
 
 export interface RecordTransactionInput {
@@ -18,6 +21,8 @@ export interface RecordTransactionInput {
   description: string;
   merchant?: string;
   notes?: string;
+  isEssential?: boolean;
+  source?: string; // MANUAL, NFC_READ, OCR_RECEIPT, IMPORT
   receiptId?: string;
   idempotencyKey?: string;
 }
@@ -42,12 +47,15 @@ export class LedgerService {
         userId,
         name: input.name,
         type: input.type,
+        issuer: input.issuer,
+        cardLast4: input.cardLast4,
         accountNo: input.accountNo,
         color: input.color || '#10b981',
-        icon: input.icon || 'Wallet',
+        icon: input.icon || (input.type === 'EMONEY' ? 'CreditCard' : 'Wallet'),
         openingBalance: input.openingBalance,
         recordedBalance: input.openingBalance,
         lastVerifiedBalance: input.openingBalance,
+        lastBalanceSource: input.lastBalanceSource || 'MANUAL',
         lastReconciledAt: new Date(),
       },
     });
@@ -103,6 +111,8 @@ export class LedgerService {
           description: input.description,
           merchant: input.merchant,
           notes: input.notes,
+          isEssential: input.isEssential !== undefined ? input.isEssential : true,
+          source: input.source || 'MANUAL',
           receiptId: input.receiptId,
           idempotencyKey: input.idempotencyKey,
         },
@@ -271,7 +281,8 @@ export class LedgerService {
     userId: string,
     walletId: string,
     actualBalance: bigint,
-    createAdjustment = false
+    createAdjustment = false,
+    source: string = 'MANUAL'
   ) {
     return prisma.$transaction(async (tx) => {
       const wallet = await tx.wallet.findFirst({
@@ -281,11 +292,12 @@ export class LedgerService {
 
       const discrepancy = actualBalance - wallet.recordedBalance;
 
-      // Update verification metadata
+      // Update verification metadata & source
       let updatedWallet = await tx.wallet.update({
         where: { id: walletId },
         data: {
           lastVerifiedBalance: actualBalance,
+          lastBalanceSource: source,
           lastReconciledAt: new Date(),
         },
       });
@@ -302,8 +314,9 @@ export class LedgerService {
             type: isIncome ? 'INCOME' : 'EXPENSE',
             amount: absDiff,
             date: new Date(),
-            description: `Penyesuaian Rekonsiliasi Saldo (${discrepancy > 0n ? '+' : '-'}${absDiff.toString()})`,
-            notes: `Penyesuaian saldo sistem dengan saldo aktual yang diverifikasi. Saldo sebelumnya: ${wallet.recordedBalance}`,
+            description: `Penyesuaian Saldo (${source === 'NFC_READ' ? 'NFC' : 'Manual'}) (${discrepancy > 0n ? '+' : '-'}${absDiff.toString()})`,
+            notes: `Penyesuaian saldo sistem dengan saldo fisik aktual (${source}). Saldo sebelumnya: ${wallet.recordedBalance}`,
+            source,
             isVerified: true,
           },
         });

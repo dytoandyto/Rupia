@@ -7,6 +7,7 @@ import { serializeBigInt } from '@/lib/db';
 const reconcileSchema = z.object({
   actualBalance: z.number().min(0, 'Saldo aktual tidak boleh negatif'),
   createAdjustment: z.boolean().default(false),
+  source: z.string().default('MANUAL'),
 });
 
 export async function POST(
@@ -16,13 +17,14 @@ export async function POST(
   try {
     const session = await requireAuth();
     const body = await req.json();
-    const { actualBalance, createAdjustment } = reconcileSchema.parse(body);
+    const { actualBalance, createAdjustment, source } = reconcileSchema.parse(body);
 
     const result = await LedgerService.reconcileWallet(
       session.userId,
       params.id,
       BigInt(actualBalance),
-      createAdjustment
+      createAdjustment,
+      source
     );
 
     return NextResponse.json({
@@ -41,4 +43,3 @@ export async function POST(
     return NextResponse.json({ error: 'Gagal merekonsiliasi dompet' }, { status: 500 });
   }
 }
-

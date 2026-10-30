@@ -11,6 +11,8 @@ import AiInsightWidget from '@/components/dashboard/AiInsightWidget';
 import DailyCheckInSheet from '@/components/sheets/DailyCheckInSheet';
 import QuickAddSheet from '@/components/sheets/QuickAddSheet';
 import ReceiptCameraModal from '@/components/camera/ReceiptCameraModal';
+import EmoneyDashboardWidget from '@/components/dashboard/EmoneyDashboardWidget';
+import EmoneyCardModal from '@/components/emoney/EmoneyCardModal';
 import { formatDateIndo, formatRupiah } from '@/lib/formatters';
 
 export default function BerandaPage() {
@@ -21,6 +23,7 @@ export default function BerandaPage() {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [selectedEmoneyWallet, setSelectedEmoneyWallet] = useState<any | null>(null);
 
   const loadOverview = async () => {
     try {
@@ -237,7 +240,14 @@ export default function BerandaPage() {
           </div>
         </div>
 
-        {/* 6. Rupia AI Intelligent Insight Card */}
+        {/* 6. Physical E-Money Cards & Transit Widget */}
+        <EmoneyDashboardWidget
+          wallets={data?.wallets || []}
+          eMoneyAnalytics={data?.eMoneyAnalytics}
+          onOpenCardModal={(w) => setSelectedEmoneyWallet(w)}
+        />
+
+        {/* 7. Rupia AI Intelligent Insight Card */}
         {data?.aiInsight && (
           <AiInsightWidget
             observation={data.aiInsight.observation}
@@ -245,15 +255,25 @@ export default function BerandaPage() {
           />
         )}
 
-        {/* 7. Budget Section ("Status Anggaran Aktif") */}
+        {/* 8. Budget Section ("Status Anggaran Aktif") */}
         <BudgetProgressCard budget={data?.budgetStatus} />
 
-        {/* 8. Recent Transactions ("Transaksi Terkini") */}
+        {/* 9. Recent Transactions ("Transaksi Terkini") */}
         <RecentTransactionsList
           transactions={data?.recentTransactions || []}
           totalCount={data?.recentTransactions?.length || 0}
         />
       </div>
+
+      {/* E-Money Dedicated Card Management Modal */}
+      <EmoneyCardModal
+        wallet={selectedEmoneyWallet}
+        isOpen={Boolean(selectedEmoneyWallet)}
+        onClose={() => setSelectedEmoneyWallet(null)}
+        onUpdate={loadOverview}
+        allWallets={data?.wallets || []}
+        categories={data?.budgetStatus?.categories?.map((c: any) => ({ id: c.categoryId, name: c.categoryName })) || []}
+      />
 
       {/* Daily Check-In Sheet */}
       <DailyCheckInSheet

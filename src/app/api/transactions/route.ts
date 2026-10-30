@@ -14,6 +14,8 @@ const transactionSchema = z.object({
   description: z.string().min(1, 'Keterangan transaksi wajib diisi'),
   merchant: z.string().optional(),
   notes: z.string().optional(),
+  isEssential: z.boolean().optional(),
+  source: z.string().optional(),
   receiptId: z.string().optional(),
   idempotencyKey: z.string().optional(),
 });
@@ -26,6 +28,8 @@ export async function GET(req: Request) {
     const walletId = searchParams.get('walletId');
     const categoryId = searchParams.get('categoryId');
     const type = searchParams.get('type');
+    const source = searchParams.get('source');
+    const isEssential = searchParams.get('isEssential');
     const search = searchParams.get('search');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
@@ -40,6 +44,10 @@ export async function GET(req: Request) {
     if (walletId) where.walletId = walletId;
     if (categoryId) where.categoryId = categoryId;
     if (type) where.type = type;
+    if (source) where.source = source;
+    if (isEssential !== null && isEssential !== undefined) {
+      where.isEssential = isEssential === 'true';
+    }
     if (search) {
       where.OR = [
         { description: { contains: search } },
@@ -115,4 +123,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Gagal mencatat transaksi' }, { status: 500 });
   }
 }
-

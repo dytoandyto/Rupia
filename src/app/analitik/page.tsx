@@ -9,6 +9,10 @@ import {
   RefreshCw,
   PieChart as PieIcon,
   ChevronLeft,
+  Car,
+  Layers,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import Link from 'next/link';
 import MobileShell from '@/components/layout/MobileShell';
@@ -44,7 +48,7 @@ export default function AnalitikPage() {
           </Link>
           <div>
             <h1 className="text-lg font-bold text-on-surface tracking-tight">Analitik Finansial</h1>
-            <p className="text-xs text-on-surface-variant">Pola arus kas & laporan pengeluaran riil</p>
+            <p className="text-xs text-on-surface-variant">Pola arus kas &amp; laporan pengeluaran riil</p>
           </div>
         </div>
 
@@ -114,6 +118,97 @@ export default function AnalitikPage() {
                 </div>
               </div>
             </div>
+
+            {/* Toll & Transport Spending Breakdown */}
+            {report.transportAndToll && (
+              <div className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-4 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center">
+                      <Car className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-on-surface text-xs block">
+                        Pengeluaran Tol, Parkir &amp; Transit
+                      </span>
+                      <span className="text-[10px] text-on-surface-variant">
+                        Kartu E-Money &amp; Transportasi
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-bold font-mono text-on-surface">
+                    {formatRupiah(report.transportAndToll.total)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant/30 text-[11px]">
+                  <div>
+                    <span className="text-outline block">Frekuensi Perjalanan:</span>
+                    <span className="font-bold text-on-surface">
+                      {report.transportAndToll.tripCount} kali transaksi tol/transit
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-outline block">Porsi Pengeluaran:</span>
+                    <span className="font-bold text-primary-container">
+                      {report.transportAndToll.percentageOfExpenses}% dari total belanja
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Essential vs Discretionary Priority Breakdown */}
+            {report.priorityBreakdown && (
+              <div className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-4 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-on-surface uppercase tracking-wider text-[11px]">
+                    Kebutuhan vs Keinginan
+                  </span>
+                  <span className="text-[10px] text-outline">Prinsip 50/30/20</span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-surface-container-high rounded-full h-3 overflow-hidden flex">
+                  <div
+                    className="h-full bg-primary-container transition-all"
+                    style={{ width: `${report.priorityBreakdown.essentialPercentage}%` }}
+                    title="Kebutuhan Primer"
+                  />
+                  <div
+                    className="h-full bg-tertiary-container transition-all"
+                    style={{ width: `${report.priorityBreakdown.discretionaryPercentage}%` }}
+                    title="Keinginan"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-primary-container shrink-0" />
+                    <div>
+                      <p className="text-[11px] font-bold text-on-surface">
+                        Primer: {formatRupiah(report.priorityBreakdown.essential)}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant">
+                        {report.priorityBreakdown.essentialPercentage}% dari belanja
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-tertiary-container shrink-0" />
+                    <div>
+                      <p className="text-[11px] font-bold text-on-surface">
+                        Keinginan: {formatRupiah(report.priorityBreakdown.discretionary)}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant">
+                        {report.priorityBreakdown.discretionaryPercentage}% dari belanja
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Daily Expense Burn Rate Chart */}
             <div className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-4 space-y-3 shadow-xs">
@@ -199,4 +294,3 @@ export default function AnalitikPage() {
     </MobileShell>
   );
 }
-

@@ -10,7 +10,9 @@ datasource db {
 enum WalletType {
   BANK
   EWALLET
+  EMONEY
   CASH
+  SAVINGS
   INVESTMENT
   OTHER
 }
@@ -129,14 +131,17 @@ model Account {
 model Wallet {
   id                  String       @id @default(uuid())
   userId              String
-  name                String       // e.g. "Mandiri", "GoPay", "Dompet Tunai"
+  name                String       // e.g. "Mandiri e-money Tol", "Flazz Utama", "GoPay"
   type                WalletType   @default(BANK)
+  issuer              String?      // e.g. "MANDIRI", "BCA", "BRI", "BNI", "OTHER"
+  cardLast4           String?      // e.g. "1234"
   accountNo           String?
   color               String       @default("#10b981")
   icon                String       @default("Wallet")
   openingBalance      BigInt       @default(0) // in IDR
   recordedBalance     BigInt       @default(0) // calculated posted balance
-  lastVerifiedBalance BigInt?      // actual balance reported by user
+  lastVerifiedBalance BigInt?      // actual balance reported by user or NFC scan
+  lastBalanceSource   String?      @default("MANUAL") // MANUAL, NFC_READ, RECONCILIATION, IMPORT
   lastReconciledAt    DateTime?
   isArchived          Boolean      @default(false)
   createdAt           DateTime     @default(now())
@@ -182,6 +187,8 @@ model Transaction {
   description    String
   merchant       String?
   notes          String?
+  isEssential    Boolean         @default(true) // essential (kebutuhan) vs discretionary (keinginan)
+  source         String          @default("MANUAL") // MANUAL, NFC_READ, OCR_RECEIPT, IMPORT
   receiptId      String?         @unique
   transferId     String?
   isVerified     Boolean         @default(true)
