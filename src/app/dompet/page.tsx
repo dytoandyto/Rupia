@@ -5,27 +5,28 @@ import Link from 'next/link';
 import {
   Wallet,
   Plus,
-  ChevronLeft,
-  Building2,
+  Landmark,
   Smartphone,
   Banknote,
   CreditCard,
   PiggyBank,
-  CheckCircle,
+  CheckCircle2,
   AlertCircle,
   Wifi,
   Clock,
   ArrowRightLeft,
   X,
   RefreshCw,
-  Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import MobileShell from '@/components/layout/MobileShell';
 import { formatRupiah, formatRelativeDateIndo } from '@/lib/formatters';
+import { useBalancePrivacy } from '@/lib/privacy-context';
 import EmoneyCardModal from '@/components/emoney/EmoneyCardModal';
 import AddWalletModal from '@/components/emoney/AddWalletModal';
 
 export default function DompetPage() {
+  const { isBalanceHidden } = useBalancePrivacy();
   const [wallets, setWallets] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,7 @@ export default function DompetPage() {
   const [reconcilingWallet, setReconcilingWallet] = useState<any | null>(null);
   const [actualBalanceInput, setActualBalanceInput] = useState('');
   const [createAdjustment, setCreateAdjustment] = useState(false);
+  const [isReconciling, setIsReconciling] = useState(false);
 
   const loadData = async () => {
     try {
@@ -63,59 +65,57 @@ export default function DompetPage() {
     loadData();
   }, []);
 
-  const handleReconcile = async () => {
+  const handleReconcileSubmit = async () => {
     if (!reconcilingWallet) return;
     const actual = parseInt(actualBalanceInput.replace(/[^0-9]/g, ''), 10) || 0;
 
+    setIsReconciling(true);
     try {
       const res = await fetch(`/api/wallets/${reconcilingWallet.id}/reconcile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           actualBalance: actual,
-          createAdjustment,
-          source: 'MANUAL',
+          createAdjustmentTransaction: createAdjustment,
         }),
       });
 
       if (res.ok) {
         setReconcilingWallet(null);
-        setActualBalanceInput('');
         loadData();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Gagal menyimpan rekonsiliasi');
       }
-    } catch (err) {
-      console.error('[RECONCILE ERROR]', err);
+    } catch {
+      alert('Terjadi kesalahan jaringan');
+    } finally {
+      setIsReconciling(false);
     }
   };
 
-  const getIcon = (walletType: string) => {
-    switch (walletType) {
-      case 'EMONEY':
-        return CreditCard;
+  const getIcon = (type: string) => {
+    switch (type) {
       case 'BANK':
-        return Building2;
+        return Landmark;
       case 'EWALLET':
         return Smartphone;
       case 'CASH':
         return Banknote;
       case 'SAVINGS':
         return PiggyBank;
+      case 'INVESTMENT':
+        return TrendingUp;
       default:
-        return Wallet;
+        return CreditCard;
     }
   };
 
-  // Filter wallets
   const filteredWallets = wallets.filter((w) => {
     if (selectedFilter === 'ALL') return true;
-    if (selectedFilter === 'EMONEY') return w.type === 'EMONEY';
-    if (selectedFilter === 'EWALLET') return w.type === 'EWALLET';
-    if (selectedFilter === 'BANK') return w.type === 'BANK';
-    if (selectedFilter === 'CASH') return w.type === 'CASH' || w.type === 'SAVINGS';
-    return true;
+    return w.type === selectedFilter;
   });
 
-  // Calculate totals
   const totalAssets = wallets.reduce((sum, w) => sum + Number(w.recordedBalance), 0);
   const combinedEWalletAndEMoney = wallets
     .filter((w) => w.type === 'EWALLET' || w.type === 'EMONEY')
@@ -123,67 +123,67 @@ export default function DompetPage() {
 
   return (
     <MobileShell>
-      <div className="space-y-4 pb-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            <Link href="/profil" className="p-1 text-outline hover:text-on-surface">
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold text-on-surface tracking-tight">Kelola Dompet &amp; Kartu</h1>
-              <p className="text-xs text-on-surface-variant">Rekonsiliasi saldo bank, e-wallet &amp; kartu e-money</p>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Dompet &amp; Rekening Finansial
+            </h1>
+            <p className="text-xs text-text-secondary mt-0.5">
+              Kelola saldo bank, e-wallet, kas fisik, dan kartu uang elektronik dengan verifikasi akurat.
+            </p>
           </div>
+
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="p-2 bg-primary-container hover:bg-primary text-white font-bold rounded-xl flex items-center gap-1 text-xs active:scale-95 transition-all shadow-xs"
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl text-xs transition-colors shadow-xs"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Tambah</span>
+            <Plus className="w-4 h-4" />
+            <span>Tambah Akun Baru</span>
           </button>
         </div>
 
-        {/* Balance Overview Card - Deep Forest Luxury Obsidian */}
-        <div className="bg-inverse-surface border border-surface-variant/20 rounded-3xl p-5 text-white shadow-lg space-y-3">
+        {/* Balance Overview Card (Matte Deep Forest Style) */}
+        <div className="bg-card-dark text-white rounded-2xl p-5 sm:p-6 border border-white/10 shadow-xs space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <span className="text-[10px] text-white/70 block uppercase tracking-wider font-semibold">
+              <span className="text-[11px] text-white/70 block uppercase tracking-wider font-medium">
                 Total Aset Seluruh Dompet
               </span>
-              <span className="text-2xl font-black font-mono tracking-tight text-white">
-                {formatRupiah(totalAssets)}
+              <span className="text-3xl font-bold tabular-nums text-white block mt-1">
+                {formatRupiah(totalAssets, isBalanceHidden)}
               </span>
             </div>
-            <span className="text-[10px] font-bold bg-white/10 text-primary-fixed px-2 py-0.5 rounded-full border border-white/10">
-              {wallets.length} Dompet Aktif
+            <span className="text-xs font-medium bg-white/10 text-white px-2.5 py-1 rounded-full border border-white/10">
+              {wallets.length} Akun Terdaftar
             </span>
           </div>
 
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-white/80">
+          <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/80">
             <span>Saldo Gabungan E-Wallet &amp; E-Money:</span>
-            <span className="font-mono font-bold text-primary-fixed">
-              {formatRupiah(combinedEWalletAndEMoney)}
+            <span className="font-semibold tabular-nums text-white">
+              {formatRupiah(combinedEWalletAndEMoney, isBalanceHidden)}
             </span>
           </div>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-xs">
           {[
-            { id: 'ALL', label: 'Semua' },
-            { id: 'EMONEY', label: 'Kartu E-Money' },
+            { id: 'ALL', label: 'Semua Akun' },
+            { id: 'BANK', label: 'Rekening Bank' },
             { id: 'EWALLET', label: 'E-Wallet' },
-            { id: 'BANK', label: 'Bank' },
-            { id: 'CASH', label: 'Kas & Tunai' },
+            { id: 'EMONEY', label: 'Kartu E-Money Fisik' },
+            { id: 'CASH', label: 'Kas Tunai' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedFilter(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-medium border whitespace-nowrap transition-colors ${
                 selectedFilter === tab.id
-                  ? 'bg-primary-container text-white shadow-xs'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+                  ? 'bg-primary text-white border-primary shadow-xs'
+                  : 'bg-surface-card border-border-subtle text-text-secondary hover:text-text-primary'
               }`}
             >
               {tab.label}
@@ -191,171 +191,149 @@ export default function DompetPage() {
           ))}
         </div>
 
+        {/* Wallet Cards List / Responsive Grid */}
         {loading ? (
           <div className="flex justify-center py-20">
-            <RefreshCw className="w-6 h-6 text-primary-container animate-spin" />
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
           </div>
         ) : filteredWallets.length === 0 ? (
-          <div className="text-center py-12 bg-surface-container-lowest rounded-3xl border border-surface-variant/40 p-6 space-y-2">
-            <CreditCard className="w-10 h-10 text-outline mx-auto opacity-40" />
-            <h3 className="font-bold text-sm text-on-surface">Tidak Ada Dompet pada Kategori Ini</h3>
-            <p className="text-xs text-on-surface-variant">
-              Ketuk tombol &quot;Tambah&quot; di atas untuk menambahkan kartu e-money atau dompet digital baru.
+          <div className="text-center py-12 bg-surface-card rounded-2xl border border-border-subtle p-6 space-y-2">
+            <CreditCard className="w-8 h-8 text-text-secondary mx-auto opacity-50" />
+            <h3 className="font-semibold text-sm text-text-primary">Tidak Ada Akun pada Kategori Ini</h3>
+            <p className="text-xs text-text-secondary">
+              Gunakan tombol &quot;Tambah Akun Baru&quot; di atas untuk menambahkan instrumen keuangan.
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredWallets.map((w) => {
               const isEmoney = w.type === 'EMONEY';
               const Icon = getIcon(w.type);
-              const isReconciledRecently =
-                w.lastReconciledAt &&
-                new Date(w.lastReconciledAt).getTime() > Date.now() - 7 * 24 * 3600 * 1000;
 
               // Distinct render for Physical E-Money Cards
               if (isEmoney) {
                 const issuer = (w.issuer || '').toUpperCase();
-                let cardBg = 'bg-gradient-to-r from-[#0f2b48] to-[#163c66]';
+                let cardBg = 'bg-[#16251E] text-white border-white/10';
                 let issuerName = 'Mandiri e-money';
 
                 if (issuer === 'BCA' || w.name.toLowerCase().includes('flazz')) {
-                  cardBg = 'bg-gradient-to-r from-[#003399] to-[#0047ba]';
+                  cardBg = 'bg-[#003399] text-white border-blue-400/20';
                   issuerName = 'BCA Flazz';
                 } else if (issuer === 'BRI' || w.name.toLowerCase().includes('brizzi')) {
-                  cardBg = 'bg-gradient-to-r from-[#00529c] to-[#0070d2]';
+                  cardBg = 'bg-[#00529C] text-white border-sky-400/20';
                   issuerName = 'BRI Brizzi';
                 } else if (issuer === 'BNI' || w.name.toLowerCase().includes('tapcash')) {
-                  cardBg = 'bg-gradient-to-r from-[#ea580c] to-[#c2410c]';
+                  cardBg = 'bg-[#C2410C] text-white border-orange-400/20';
                   issuerName = 'BNI TapCash';
                 } else {
-                  cardBg = 'bg-gradient-to-r from-[#28332e] to-[#1c2622]';
-                  issuerName = 'E-Money Card';
+                  cardBg = 'bg-[#202722] text-white border-white/10';
+                  issuerName = 'Kartu Prabayar';
                 }
 
                 return (
                   <div
                     key={w.id}
                     onClick={() => setSelectedEmoneyWallet(w)}
-                    className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-4.5 space-y-3 shadow-xs hover:border-primary-container/40 transition-all cursor-pointer group"
+                    className="bg-surface-card border border-border-subtle rounded-2xl p-4.5 space-y-3 shadow-xs hover:border-primary/40 transition-colors cursor-pointer flex flex-col justify-between"
                   >
                     {/* Visual Card Banner Header */}
-                    <div className={`w-full rounded-2xl p-3.5 text-white ${cardBg} shadow-xs flex items-center justify-between`}>
+                    <div className={`w-full rounded-xl p-3.5 ${cardBg} border shadow-xs flex items-center justify-between`}>
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
                           <CreditCard className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold tracking-wider uppercase text-white/80 block">
+                          <span className="text-[10px] font-semibold tracking-wider uppercase text-white/80 block">
                             {issuerName}
                           </span>
-                          <span className="font-mono text-xs text-white tracking-wider">
-                            •••• {w.cardLast4 || '8821'}
+                          <span className="text-xs font-bold text-white">
+                            {w.name} {w.cardLast4 ? `(•• ${w.cardLast4})` : ''}
                           </span>
                         </div>
                       </div>
-                      <Wifi className="w-4 h-4 text-white/80 rotate-90" />
+                      <Wifi className="w-4 h-4 text-white rotate-90" />
                     </div>
 
-                    <div className="flex items-center justify-between pt-1">
+                    {/* Balance Info */}
+                    <div className="flex items-end justify-between pt-1">
                       <div>
-                        <h3 className="font-bold text-sm text-on-surface group-hover:text-primary-container transition-colors">
-                          {w.name}
-                        </h3>
-                        <div className="flex items-center gap-1.5 text-[10px] text-on-surface-variant mt-0.5">
-                          <Clock className="w-3 h-3 text-outline" />
-                          <span>
-                            {w.lastReconciledAt ? formatRelativeDateIndo(w.lastReconciledAt) : 'Belum diverifikasi'}
-                          </span>
-                          <span className="bg-surface-container px-1.5 py-0.2 rounded font-mono uppercase text-[9px]">
-                            {w.lastBalanceSource === 'NFC_READ' ? 'NFC' : 'Manual'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="text-[10px] text-outline block">Saldo Kartu:</span>
-                        <span className="text-lg font-bold font-mono text-on-surface">
-                          {formatRupiah(w.recordedBalance)}
+                        <span className="text-[11px] text-text-secondary block">Saldo Tercatat:</span>
+                        <span className="text-lg font-bold text-text-primary tabular-nums">
+                          {formatRupiah(w.recordedBalance, isBalanceHidden)}
                         </span>
                       </div>
+                      <span className="text-[11px] text-primary font-medium underline">
+                        Buka Kartu &amp; Top-Up →
+                      </span>
                     </div>
 
-                    <div className="pt-2 border-t border-surface-variant/30 flex justify-between items-center text-xs">
-                      <span className="text-[11px] text-primary-container font-semibold">
-                        Kelola Top-Up &amp; Bayar Tol &rarr;
+                    {/* Metadata Footer */}
+                    <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-[11px] text-text-secondary">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {w.lastReconciledAt
+                          ? `Verifikasi: ${formatRelativeDateIndo(w.lastReconciledAt)}`
+                          : 'Belum verifikasi NFC'}
                       </span>
-                      {isReconciledRecently ? (
-                        <span className="flex items-center gap-1 text-[10px] text-primary font-medium bg-primary-fixed px-2 py-0.5 rounded-full">
-                          <CheckCircle className="w-3 h-3" /> Akurat
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-[10px] text-tertiary font-medium bg-tertiary-fixed px-2 py-0.5 rounded-full">
-                          <AlertCircle className="w-3 h-3" /> Perlu Cek
-                        </span>
-                      )}
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-surface-container font-mono">
+                        {w.lastBalanceSource === 'NFC_SCAN' ? 'NFC Scan' : 'Manual'}
+                      </span>
                     </div>
                   </div>
                 );
               }
 
-              // Standard Bank / E-Wallet / Cash Card
+              // Normal Wallet (Bank, E-Wallet, Cash, Savings)
               return (
                 <div
                   key={w.id}
-                  className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-4.5 space-y-3 shadow-xs"
+                  className="bg-surface-card border border-border-subtle rounded-2xl p-4.5 space-y-3 shadow-xs hover:border-primary/40 transition-colors flex flex-col justify-between"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-xs"
-                        style={{ backgroundColor: w.color || '#167a55' }}
-                      >
-                        <Icon className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center text-text-primary border border-border-subtle">
+                        <Icon className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-sm text-on-surface">{w.name}</h3>
-                        <span className="text-[10px] text-on-surface-variant">
-                          {w.type} {w.accountNo ? `• ${w.accountNo}` : ''}
+                        <h4 className="font-semibold text-xs text-text-primary truncate max-w-[170px]">
+                          {w.name}
+                        </h4>
+                        <span className="text-[11px] text-text-secondary">
+                          {w.type === 'BANK'
+                            ? `Rekening ${w.accountNo ? `•• ${w.accountNo.slice(-4)}` : ''}`
+                            : w.type === 'EWALLET'
+                            ? 'Dompet Digital'
+                            : 'Kas Fisik'}
                         </span>
                       </div>
                     </div>
 
-                    {isReconciledRecently ? (
-                      <span className="flex items-center gap-1 text-[10px] text-primary font-medium bg-primary-fixed px-2 py-0.5 rounded-full border border-primary/20">
-                        <CheckCircle className="w-3 h-3" /> Akurat
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-[10px] text-tertiary font-medium bg-tertiary-fixed px-2 py-0.5 rounded-full border border-tertiary/20">
-                        <AlertCircle className="w-3 h-3" /> Perlu Cek
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex justify-between items-baseline pt-1">
-                    <div>
-                      <span className="text-[10px] text-outline block">Saldo Tercatat:</span>
-                      <span className="text-xl font-bold font-mono text-on-surface">
-                        {formatRupiah(w.recordedBalance)}
-                      </span>
-                    </div>
-
                     <button
+                      type="button"
                       onClick={() => {
                         setReconcilingWallet(w);
-                        setActualBalanceInput(w.recordedBalance.toString());
+                        setActualBalanceInput(String(w.recordedBalance));
                       }}
-                      className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-variant text-primary-container rounded-xl text-xs font-semibold border border-outline/10 active:scale-95 transition-all shadow-xs"
+                      className="px-2.5 py-1 rounded-lg border border-border-subtle hover:bg-surface-container text-text-secondary text-[11px] font-medium transition-colors"
                     >
-                      Rekonsiliasi Saldo
+                      Rekonsiliasi
                     </button>
                   </div>
 
-                  <div className="pt-2 border-t border-surface-variant/30 flex justify-between text-[10px] text-outline">
-                    <span>
-                      Verifikasi terakhir:{' '}
-                      {w.lastReconciledAt ? formatRelativeDateIndo(w.lastReconciledAt) : 'Belum diverifikasi'}
+                  <div>
+                    <span className="text-[11px] text-text-secondary block">Saldo Tercatat:</span>
+                    <span className="text-xl font-bold text-text-primary tabular-nums block mt-0.5">
+                      {formatRupiah(w.recordedBalance, isBalanceHidden)}
                     </span>
-                    <span>Awal: {formatRupiah(w.openingBalance)}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-border-subtle text-[11px] text-text-secondary">
+                    <span>
+                      {w.lastReconciledAt
+                        ? `Sinkron: ${formatRelativeDateIndo(w.lastReconciledAt)}`
+                        : 'Belum diverifikasi'}
+                    </span>
+                    <span className="text-primary font-medium">Aktif</span>
                   </div>
                 </div>
               );
@@ -363,14 +341,7 @@ export default function DompetPage() {
           </div>
         )}
 
-        {/* Add Wallet Modal */}
-        <AddWalletModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onSuccess={loadData}
-        />
-
-        {/* E-Money Dedicated Card Management Modal */}
+        {/* E-Money Modal */}
         <EmoneyCardModal
           wallet={selectedEmoneyWallet}
           isOpen={Boolean(selectedEmoneyWallet)}
@@ -380,54 +351,80 @@ export default function DompetPage() {
           categories={categories}
         />
 
-        {/* Standard Reconcile Modal for Non-E-Money wallets */}
+        {/* Add Wallet Modal */}
+        <AddWalletModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onCreated={loadData}
+        />
+
+        {/* Reconcile Modal */}
         {reconcilingWallet && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 space-y-4 shadow-2xl">
-              <h4 className="font-bold text-sm text-on-surface">
-                Rekonsiliasi Saldo: {reconcilingWallet.name}
-              </h4>
-              <div className="bg-surface-container-low p-3 rounded-xl border border-surface-variant/30 flex justify-between items-center text-xs">
-                <span className="text-on-surface-variant">Saldo Tercatat:</span>
-                <span className="font-mono font-bold text-on-surface">
-                  {formatRupiah(reconcilingWallet.recordedBalance)}
-                </span>
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+            <div className="w-full max-w-sm rounded-2xl bg-surface-card p-5 border border-border-subtle shadow-lg space-y-4">
+              <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">Rekonsiliasi Saldo</h3>
+                  <p className="text-xs text-text-secondary">{reconcilingWallet.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReconcilingWallet(null)}
+                  className="w-7 h-7 rounded-lg text-text-secondary hover:text-text-primary flex items-center justify-center"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div>
-                <label className="text-xs text-on-surface-variant block mb-1">
-                  Berapa saldo aktual saat ini?
+              <div className="bg-surface-container-low rounded-xl p-3 text-xs space-y-1.5 border border-border-subtle">
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Saldo Tercatat Sistem:</span>
+                  <strong className="font-semibold tabular-nums text-text-primary">
+                    {formatRupiah(reconcilingWallet.recordedBalance, isBalanceHidden)}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-text-primary block">
+                  Saldo Riil Aktual (IDR)
                 </label>
                 <input
                   type="number"
                   value={actualBalanceInput}
                   onChange={(e) => setActualBalanceInput(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-base font-mono font-bold text-primary-container focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/20"
+                  placeholder="Contoh: 2500000"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border-subtle bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-text-primary tabular-nums"
                 />
               </div>
 
-              <label className="flex items-start gap-2 text-xs text-on-surface-variant cursor-pointer">
+              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-text-primary">
                 <input
                   type="checkbox"
                   checked={createAdjustment}
                   onChange={(e) => setCreateAdjustment(e.target.checked)}
-                  className="mt-0.5 rounded border-outline text-primary-container focus:ring-primary-container"
+                  className="mt-0.5 rounded border-border-subtle text-primary focus:ring-primary/20"
                 />
-                <span>Buat transaksi penyesuaian otomatis jika ada selisih.</span>
+                <span className="leading-snug">
+                  Buat transaksi Penyesuaian (Adjustment) jika terdapat selisih.
+                </span>
               </label>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-2">
                 <button
+                  type="button"
                   onClick={() => setReconcilingWallet(null)}
-                  className="flex-1 py-2.5 bg-surface-container-high text-on-surface-variant hover:text-on-surface text-xs font-semibold rounded-xl transition-colors"
+                  className="flex-1 py-2 rounded-xl border border-border-subtle text-text-secondary text-xs font-medium hover:bg-surface-container-low"
                 >
                   Batal
                 </button>
                 <button
-                  onClick={handleReconcile}
-                  className="flex-1 py-2.5 bg-primary-container hover:bg-primary text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                  type="button"
+                  onClick={handleReconcileSubmit}
+                  disabled={isReconciling}
+                  className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50"
                 >
-                  Konfirmasi
+                  {isReconciling ? 'Menyimpan...' : 'Simpan Rekonsiliasi'}
                 </button>
               </div>
             </div>

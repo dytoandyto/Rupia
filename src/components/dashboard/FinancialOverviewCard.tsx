@@ -1,9 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
+import {
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  AlertCircle,
+  Plus,
+  Camera,
+  ArrowRightLeft,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Info,
+  X,
+} from 'lucide-react';
 import { formatRupiah } from '@/lib/formatters';
 import { AtsBreakdown } from '@/lib/services/ats-service';
-import StitchThreeBackground from '../animation/StitchThreeBackground';
+import { useBalancePrivacy } from '@/lib/privacy-context';
 
 interface FinancialOverviewCardProps {
   totalRecordedBalance: number;
@@ -28,179 +41,217 @@ export default function FinancialOverviewCard({
   onOpenScanReceipt,
   onOpenTransfer,
 }: FinancialOverviewCardProps) {
-  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
+  const { isBalanceHidden, toggleBalanceHidden } = useBalancePrivacy();
   const [showAtsDetails, setShowAtsDetails] = useState(false);
 
   const daysRemaining = atsBreakdown?.daysRemainingInMonth || 8;
-  const dailySafe = atsBreakdown?.dailySafeToSpend ? Number(atsBreakdown.dailySafeToSpend) : Math.round(availableToSpend / Math.max(1, daysRemaining));
+  const dailySafe = atsBreakdown?.dailySafeToSpend
+    ? Number(atsBreakdown.dailySafeToSpend)
+    : Math.round(availableToSpend / Math.max(1, daysRemaining));
 
-  const displayBalance = isBalanceHidden ? 'Rp ••••••••' : formatRupiah(totalRecordedBalance);
-  const displaySafeToday = isBalanceHidden ? 'Rp ••••••' : formatRupiah(dailySafe);
+  const displayBalance = formatRupiah(totalRecordedBalance, isBalanceHidden);
+  const displaySafeToday = formatRupiah(dailySafe, isBalanceHidden);
+  const displayIncome = formatRupiah(incomeThisMonth, isBalanceHidden);
+  const displayExpense = formatRupiah(expensesThisMonth, isBalanceHidden);
 
   return (
     <>
-      {/* Primary Balance Hero Card (Deep Forest Luxury Aesthetic) */}
-      <div className="relative w-full rounded-2xl bg-inverse-surface text-inverse-on-surface p-5 shadow-lg overflow-hidden border border-primary-container/20">
-        {/* Subtle ambient emerald radial glow overlay */}
-        <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-primary-container/20 blur-2xl pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-52 h-52 rounded-full bg-primary/25 blur-3xl pointer-events-none" />
-
-        {/* 3D Three.js Fluid Particle Wave Canvas */}
-        <div className="absolute inset-0 opacity-30 pointer-events-none overflow-hidden">
-          <StitchThreeBackground particleColor={0x7ed8ac} />
-        </div>
-
-        <div className="relative z-10 flex flex-col space-y-4">
-          {/* Top Metric Bar */}
+      {/* Matte Banking Dark Surface Card (Inspired by Upocket & Pese) */}
+      <div className="relative w-full rounded-2xl bg-card-dark text-white p-5 sm:p-6 shadow-sm border border-white/10 overflow-hidden">
+        <div className="flex flex-col space-y-5">
+          {/* 1. Header: Label + Privacy + Status Badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[12px] font-medium text-inverse-on-surface/80">
-                Total Saldo Tercatat
+              <span className="text-xs font-medium text-white/70 tracking-wide uppercase">
+                Total Aset Tercatat
               </span>
               <button
                 type="button"
-                aria-label="Sembunyikan atau tampilkan saldo"
-                onClick={() => setIsBalanceHidden(!isBalanceHidden)}
-                className="flex items-center justify-center text-inverse-on-surface/70 hover:text-inverse-on-surface transition-colors p-0.5"
+                onClick={toggleBalanceHidden}
+                title={isBalanceHidden ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+                className="p-1 rounded text-white/60 hover:text-white transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {isBalanceHidden ? 'visibility_off' : 'visibility'}
-                </span>
+                {isBalanceHidden ? (
+                  <EyeOff className="w-3.5 h-3.5 text-attention" />
+                ) : (
+                  <Eye className="w-3.5 h-3.5" />
+                )}
               </button>
             </div>
 
             <button
               type="button"
               onClick={() => setShowAtsDetails(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/10 hover:bg-surface-container-lowest/15 text-primary-fixed text-[11px] font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 text-xs font-medium text-white/90 border border-white/10 transition-colors"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-pulse" />
-              <span>{netCashFlow >= 0 ? 'Keuangan Sehat' : 'Perlu Kontrol'}</span>
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  netCashFlow >= 0 ? 'bg-positive' : 'bg-attention'
+                }`}
+              />
+              <span>{netCashFlow >= 0 ? 'Arus Kas Positif' : 'Perlu Kontrol'}</span>
             </button>
           </div>
 
-          {/* Main Balance Display */}
+          {/* 2. Main Balance Metric */}
           <div>
-            <div className="text-[28px] font-bold tracking-tight text-surface-container-lowest leading-tight font-sans">
+            <div className="text-3xl sm:text-4xl font-bold tracking-tight text-white tabular-nums leading-none">
               {displayBalance}
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-inverse-on-surface/85">
-              <span className="text-[12px] text-surface-variant font-normal">
-                Sisa {daysRemaining} hari siklus dompet
+            <p className="text-xs text-white/60 mt-1.5">
+              Konsolidasi saldo seluruh rekening bank, e-wallet, e-money, dan kas tunai.
+            </p>
+          </div>
+
+          {/* 3. Available-to-Spend Sub-Card (Crucial Fintech Decision Metric) */}
+          <div
+            onClick={() => setShowAtsDetails(true)}
+            className="rounded-xl bg-white/5 border border-white/10 p-3.5 flex items-center justify-between cursor-pointer hover:bg-white/[0.08] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-primary/20 text-white flex items-center justify-center shrink-0 border border-primary/30">
+                <ShieldCheck className="w-5 h-5 text-[#34D399]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-medium text-white/70 uppercase tracking-wider">
+                  Sisa Aman Dibelanjakan Hari Ini
+                </span>
+                <span className="text-base font-semibold text-white tabular-nums mt-0.5">
+                  {displaySafeToday}
+                  <span className="text-xs font-normal text-white/60 ml-1">/ hari</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[11px] font-medium text-white/70 block">
+                Sisa {daysRemaining} hari
+              </span>
+              <span className="text-[10px] text-[#34D399] font-medium inline-flex items-center gap-0.5">
+                Detail <Info className="w-2.5 h-2.5 ml-0.5" />
               </span>
             </div>
           </div>
 
-          {/* Safe-to-Spend Sub-Card Highlight */}
-          <div
-            onClick={() => setShowAtsDetails(true)}
-            className="flex items-center justify-between p-3 rounded-xl bg-surface-container-lowest/10 backdrop-blur-md cursor-pointer hover:bg-surface-container-lowest/15 transition-colors border border-surface-container-lowest/5"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-primary-fixed/20 text-primary-fixed flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[18px]">verified_user</span>
+          {/* 4. Monthly Inflow vs Outflow Mini-Strip */}
+          <div className="grid grid-cols-2 gap-3 pt-1 border-t border-white/10">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-positive">
+                <ArrowDownLeft className="w-4 h-4 text-[#34D399]" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] text-surface-variant leading-tight font-medium uppercase tracking-wide">
-                  Aman Dibelanjakan Hari Ini
-                </span>
-                <span className="text-[15px] font-bold text-surface-container-lowest mt-0.5">
-                  {displaySafeToday}{' '}
-                  <span className="text-surface-variant text-[12px] font-normal">/ hari</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] text-white/60 uppercase">Pemasukan Bulan Ini</span>
+                <span className="text-xs font-semibold text-white tabular-nums truncate">
+                  {displayIncome}
                 </span>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-primary-fixed px-2 py-0.5 rounded-md bg-primary-fixed/10">
-              {availableToSpend > 0 ? 'Terkendali' : 'Batas Habis'}
-            </span>
+
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-negative">
+                <ArrowUpRight className="w-4 h-4 text-[#F87171]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] text-white/60 uppercase">Pengeluaran Bulan Ini</span>
+                <span className="text-xs font-semibold text-white tabular-nums truncate">
+                  {displayExpense}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Action Buttons Strip Inside Hero */}
-          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-surface-container-lowest/10">
+          {/* 5. Clean Action Buttons Strip */}
+          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
             <button
               type="button"
               onClick={onOpenQuickAdd}
-              className="flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl bg-surface-container-lowest/10 hover:bg-surface-container-lowest/15 text-inverse-on-surface transition-all active:scale-95"
+              className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-medium border border-white/10 transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px] text-primary-fixed">add_circle</span>
-              <span className="text-[10px] font-semibold tracking-tight">Catat Cepat</span>
+              <Plus className="w-3.5 h-3.5 text-[#34D399]" />
+              <span>Catat</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenScanReceipt}
-              className="flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl bg-surface-container-lowest/10 hover:bg-surface-container-lowest/15 text-inverse-on-surface transition-all active:scale-95"
+              className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-medium border border-white/10 transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px] text-surface-bright">photo_camera</span>
-              <span className="text-[10px] font-semibold tracking-tight">Pindai Struk</span>
+              <Camera className="w-3.5 h-3.5 text-white" />
+              <span>Struk</span>
             </button>
 
             <button
               type="button"
               onClick={onOpenTransfer}
-              className="flex flex-col items-center justify-center gap-1.5 py-2.5 px-1 rounded-xl bg-surface-container-lowest/10 hover:bg-surface-container-lowest/15 text-inverse-on-surface transition-all active:scale-95"
+              className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-medium border border-white/10 transition-colors"
             >
-              <span className="material-symbols-outlined text-[20px] text-tertiary-fixed">swap_horiz</span>
-              <span className="text-[10px] font-semibold tracking-tight">Transfer</span>
+              <ArrowRightLeft className="w-3.5 h-3.5 text-attention" />
+              <span>Transfer</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* ATS Breakdown Info Modal */}
+      {/* Available-to-Spend Breakdown Sheet/Modal */}
       {showAtsDetails && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 animate-in fade-in">
-          <div className="w-full max-w-md bg-surface-container-lowest rounded-t-3xl p-5 space-y-4 shadow-2xl border-t border-surface-variant max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-surface-variant pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-surface-card p-6 border border-border-subtle shadow-lg space-y-4">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[22px]">verified_user</span>
-                <h3 className="text-[16px] font-bold text-on-surface">Detail Available-To-Spend (ATS)</h3>
+                <ShieldCheck className="w-5 h-5 text-primary" />
+                <h3 className="text-sm font-bold text-text-primary">
+                  Kalkulasi Sisa Aman Belanja
+                </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setShowAtsDetails(false)}
-                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface"
+                className="p-1 text-text-secondary hover:text-text-primary"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-[12px] text-on-surface-variant leading-relaxed">
-              <strong>Available-to-Spend (ATS)</strong> adalah rumus deterministik Rupia untuk menunjukkan uang yang benar-benar bebas dibelanjakan tanpa membahayakan tagihan atau kebutuhan darurat:
-            </p>
-
-            <div className="bg-surface-container-low rounded-xl p-3 space-y-2 text-[12px] font-mono border border-surface-variant/40">
-              <div className="flex justify-between text-on-surface">
-                <span>Total Saldo Likuid</span>
-                <span className="font-bold">{formatRupiah(totalRecordedBalance)}</span>
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between py-1 border-b border-border-subtle/50">
+                <span className="text-text-secondary">Total Saldo Likuid</span>
+                <span className="font-semibold tabular-nums text-text-primary">
+                  {displayBalance}
+                </span>
               </div>
-              <div className="flex justify-between text-error">
-                <span>- Kewajiban Rutin Mendatang</span>
-                <span>{formatRupiah(atsBreakdown?.upcomingObligations ? Number(atsBreakdown.upcomingObligations) : 0)}</span>
+              <div className="flex justify-between py-1 border-b border-border-subtle/50 text-negative">
+                <span className="text-text-secondary">Komitmen Tagihan Terjadwal</span>
+                <span className="font-semibold tabular-nums">
+                  -{formatRupiah(atsBreakdown?.upcomingObligations || 0, isBalanceHidden)}
+                </span>
               </div>
-              <div className="flex justify-between text-tertiary">
-                <span>- Alokasi Anggaran & Target</span>
-                <span>{formatRupiah(atsBreakdown?.reservedAllocations ? Number(atsBreakdown.reservedAllocations) : 0)}</span>
+              <div className="flex justify-between py-1 border-b border-border-subtle/50 text-attention">
+                <span className="text-text-secondary">Alokasi Cadangan & Tabungan</span>
+                <span className="font-semibold tabular-nums">
+                  -{formatRupiah(atsBreakdown?.reservedAllocations || 0, isBalanceHidden)}
+                </span>
               </div>
-              <div className="flex justify-between text-outline">
-                <span>- Buffer Cadangan Kas Aman</span>
-                <span>{formatRupiah(atsBreakdown?.safetyBuffer ? Number(atsBreakdown.safetyBuffer) : 0)}</span>
+              <div className="flex justify-between py-1.5 bg-surface-container-low px-2 rounded-lg font-bold text-primary">
+                <span>Total Dana Bebas (Bulan Ini)</span>
+                <span className="tabular-nums">
+                  {formatRupiah(availableToSpend, isBalanceHidden)}
+                </span>
               </div>
-              <div className="border-t border-surface-variant pt-2 flex justify-between font-bold text-[14px] text-primary">
-                <span>= Sisa Uang Aman (ATS)</span>
-                <span>{formatRupiah(availableToSpend)}</span>
+              <div className="flex justify-between py-1 text-text-secondary">
+                <span>Sisa Hari Menuju Gajian</span>
+                <span className="font-semibold text-text-primary">{daysRemaining} hari</span>
               </div>
-            </div>
-
-            <div className="bg-primary-container/10 border border-primary-container/20 rounded-xl p-3 text-[12px] space-y-1">
-              <span className="font-bold text-primary block">Batas Belanja Harian yang Disarankan:</span>
-              <p className="text-on-surface-variant">
-                <strong>{formatRupiah(dailySafe)} / hari</strong> untuk sisa {daysRemaining} hari di bulan ini.
-              </p>
+              <div className="p-3 bg-primary-light rounded-xl text-primary font-medium leading-relaxed">
+                Kamu dapat membelanjakan maksimal{' '}
+                <strong className="font-bold">{displaySafeToday}</strong> per hari untuk menjaga
+                rencana tabungan dan tagihan tetap aman sampai akhir bulan.
+              </div>
             </div>
 
             <button
+              type="button"
               onClick={() => setShowAtsDetails(false)}
-              className="w-full py-2.5 bg-primary-container text-on-primary rounded-xl text-[14px] font-semibold hover:bg-primary transition-colors active:scale-95"
+              className="w-full py-2.5 rounded-xl bg-primary text-white font-medium text-xs hover:bg-primary-dark transition-colors"
             >
               Mengerti
             </button>

@@ -3,11 +3,32 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import {
+  LayoutDashboard,
+  ArrowLeftRight,
+  Wallet,
+  PieChart,
+  BarChart3,
+  Target,
+  ShieldCheck,
+  Bot,
+  FileSpreadsheet,
+  Plus,
+  Bell,
+  Eye,
+  EyeOff,
+  User,
+  LogOut,
   WifiOff,
   RefreshCw,
+  Home,
+  Receipt,
+  Settings,
 } from 'lucide-react';
 import { syncPendingDrafts, getOfflineDrafts, OfflineDraft } from '@/lib/offline-sync';
+import { useBalancePrivacy } from '@/lib/privacy-context';
+import { formatDateIndo } from '@/lib/formatters';
 import QuickAddSheet from '../sheets/QuickAddSheet';
 
 interface MobileShellProps {
@@ -23,6 +44,8 @@ export default function MobileShell({
 }: MobileShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isBalanceHidden, toggleBalanceHidden } = useBalancePrivacy();
+
   const [isOnline, setIsOnline] = useState(true);
   const [offlineDrafts, setOfflineDrafts] = useState<OfflineDraft[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -55,95 +78,136 @@ export default function MobileShell({
     };
   }, []);
 
-  const navItems = [
-    { href: '/beranda', label: 'Beranda', icon: 'home' },
-    { href: '/transaksi', label: 'Transaksi', icon: 'receipt_long' },
-    { href: '#add', label: 'Catat', icon: 'add', isAdd: true },
-    { href: '/anggaran', label: 'Anggaran', icon: 'pie_chart' },
-    { href: '/dompet', label: 'Dompet', icon: 'account_balance_wallet' },
+  // Desktop Sidebar Navigation Items
+  const sidebarItems = [
+    { href: '/beranda', label: 'Beranda', icon: LayoutDashboard },
+    { href: '/transaksi', label: 'Transaksi', icon: ArrowLeftRight },
+    { href: '/dompet', label: 'Dompet & Kartu', icon: Wallet },
+    { href: '/anggaran', label: 'Anggaran', icon: PieChart },
+    { href: '/analitik', label: 'Analitik Finansial', icon: BarChart3 },
+    { href: '/target', label: 'Target Finansial', icon: Target },
+    { href: '/skor-kesehatan', label: 'Skor Kesehatan', icon: ShieldCheck },
+    { href: '/ai', label: 'Asisten AI', icon: Bot },
+    { href: '/impor', label: 'Impor Mutasi', icon: FileSpreadsheet },
+  ];
+
+  // Mobile Bottom Navigation (5 core thumb items)
+  const mobileNavItems = [
+    { href: '/beranda', label: 'Beranda', icon: Home },
+    { href: '/transaksi', label: 'Transaksi', icon: Receipt },
+    { href: '#add', label: 'Catat', icon: Plus, isAdd: true },
+    { href: '/anggaran', label: 'Anggaran', icon: PieChart },
+    { href: '/dompet', label: 'Dompet', icon: Wallet },
   ];
 
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password';
 
   if (isAuthPage) {
-    return <main className="min-h-screen bg-surface text-on-surface">{children}</main>;
+    return <main className="min-h-screen bg-app-bg text-text-primary">{children}</main>;
   }
 
   const initialLetter = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+  const currentDateFormatted = formatDateIndo(new Date());
+
+  const getPageTitle = () => {
+    if (pathname === '/beranda') return 'Beranda Finansial';
+    if (pathname.startsWith('/transaksi')) return 'Riwayat Transaksi';
+    if (pathname.startsWith('/dompet')) return 'Dompet & Kartu';
+    if (pathname.startsWith('/anggaran')) return 'Perencanaan Anggaran';
+    if (pathname.startsWith('/analitik')) return 'Analitik & Arus Kas';
+    if (pathname.startsWith('/target')) return 'Target & Dana Darurat';
+    if (pathname.startsWith('/skor-kesehatan')) return 'Skor Kesehatan Finansial';
+    if (pathname.startsWith('/ai')) return 'Asisten Intelijen Rupia';
+    if (pathname.startsWith('/impor')) return 'Impor Mutasi Bank';
+    if (pathname.startsWith('/profil')) return 'Profil & Keamanan';
+    if (pathname.startsWith('/notifikasi')) return 'Pemberitahuan';
+    if (pathname.startsWith('/kategori')) return 'Kategori Transaksi';
+    return 'Rupia Finance';
+  };
 
   return (
-    <div className="min-h-screen bg-surface-dim/40 text-on-surface flex justify-center antialiased">
-      {/* Smartphone Viewport Constrained Container (Mobile First) */}
-      <div className="w-full max-w-md min-h-screen bg-surface flex flex-col relative pb-28 shadow-xl overflow-x-hidden border-x border-surface-variant/40">
-
-        {/* Top Header matching Stitch Approved Spec */}
-        <header className="sticky top-0 w-full z-40 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.03)] border-b border-surface-variant/30">
-          <div className="h-16 px-margin flex items-center justify-between">
-            {/* Brand Logo & App Label */}
-            <Link href="/beranda" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-xl bg-primary-container flex items-center justify-center text-on-primary font-bold shadow-sm group-hover:scale-105 transition-transform">
-                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  account_balance_wallet
-                </span>
+    <div className="min-h-screen bg-app-bg text-text-primary flex flex-col md:flex-row antialiased">
+      {/* ========================================================= */}
+      {/* DESKTOP SIDEBAR (Visible on md and larger)                */}
+      {/* ========================================================= */}
+      <aside className="hidden md:flex md:w-64 lg:w-72 md:flex-col md:fixed md:inset-y-0 bg-surface-card border-r border-border-subtle z-50">
+        <div className="flex flex-col flex-1 h-full min-h-0">
+          {/* Brand Header */}
+          <div className="h-16 px-6 flex items-center justify-between border-b border-border-subtle">
+            <Link href="/beranda" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold shadow-xs">
+                <Wallet className="w-4 h-4 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[16px] font-bold text-on-surface leading-tight tracking-tight">Rupia</span>
-                <span className="text-[10px] font-semibold text-outline tracking-wider uppercase leading-none mt-0.5">
-                  Personal Finance
+                <span className="text-[15px] font-semibold tracking-tight text-text-primary leading-tight">
+                  Rupia
+                </span>
+                <span className="text-[10px] font-medium text-text-secondary tracking-wide uppercase leading-none mt-0.5">
+                  Fintech Pribadi
                 </span>
               </div>
             </Link>
 
-            {/* Notification & Profile Header Controls */}
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => router.push('/notifikasi')}
-                aria-label="Notifikasi"
-                className="relative w-10 h-10 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container transition-colors"
-              >
-                <span className="material-symbols-outlined text-[22px]">notifications</span>
-                {unreadNotifsCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-error ring-2 ring-surface animate-pulse" />
-                )}
-              </button>
+            {/* Privacy Mask Toggle in Sidebar */}
+            <button
+              type="button"
+              onClick={toggleBalanceHidden}
+              title={isBalanceHidden ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+              className="p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-low transition-colors"
+            >
+              {isBalanceHidden ? <EyeOff className="w-4 h-4 text-attention" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => router.push('/profil')}
-                aria-label="Profil Pengguna"
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:ring-2 hover:ring-primary-container/30 transition-all"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary-container/15 text-primary-container font-bold text-xs flex items-center justify-center ring-1 ring-primary-container/30">
-                  {initialLetter}
-                </div>
-              </button>
+          {/* Primary Quick-Add Action Button */}
+          <div className="p-4 border-b border-border-subtle">
+            <button
+              type="button"
+              onClick={() => setIsQuickAddOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-dark text-white font-medium text-xs tracking-tight shadow-xs transition-all active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Catat Transaksi</span>
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-0.5 scrollbar-none">
+            {sidebarItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || (item.href !== '/beranda' && pathname.startsWith(item.href));
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    isActive
+                      ? 'bg-primary-light text-primary font-semibold'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-container-low'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary' : 'text-text-secondary'}`} />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Offline / Sync Notification in Sidebar */}
+          {!isOnline && (
+            <div className="mx-3 mb-2 px-3 py-2 rounded-lg bg-tertiary-container text-text-primary text-[11px] flex items-center gap-2">
+              <WifiOff className="w-3.5 h-3.5 text-attention shrink-0" />
+              <span>Mode Offline. Draft tersimpan lokal.</span>
             </div>
-          </div>
-        </header>
+          )}
 
-        {/* Offline & Sync Notification Banner */}
-        {!isOnline && (
-          <div className="bg-tertiary-container text-on-tertiary px-4 py-2 text-xs flex items-center justify-between sticky top-16 z-30 backdrop-blur-md">
-            <span className="flex items-center gap-1.5 font-medium">
-              <WifiOff className="w-3.5 h-3.5" />
-              Mode Offline Aktif. Transaksi disimpan lokal.
-            </span>
-            {offlineDrafts.length > 0 && (
-              <span className="bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-mono text-[10px] font-bold">
-                {offlineDrafts.length} draft
+          {isOnline && offlineDrafts.length > 0 && (
+            <div className="mx-3 mb-2 px-3 py-2 rounded-lg bg-primary-light text-primary text-[11px] flex items-center justify-between">
+              <span className="flex items-center gap-1.5 truncate">
+                <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{offlineDrafts.length} draft offline</span>
               </span>
-            )}
-          </div>
-        )}
-
-        {isOnline && offlineDrafts.length > 0 && (
-          <div className="bg-primary-container text-on-primary px-4 py-2 text-xs flex items-center justify-between sticky top-16 z-30 backdrop-blur-md">
-            <span className="flex items-center gap-1.5 font-medium">
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? 'Menyinkronkan draft offline...' : `${offlineDrafts.length} draft offline tersimpan.`}
-            </span>
-            {!isSyncing && (
               <button
                 onClick={async () => {
                   setIsSyncing(true);
@@ -152,24 +216,170 @@ export default function MobileShell({
                   setOfflineDrafts(remaining);
                   setIsSyncing(false);
                 }}
-                className="bg-surface-container-lowest/20 hover:bg-surface-container-lowest/30 px-2 py-0.5 rounded text-[11px] font-semibold"
+                className="underline font-semibold ml-1 shrink-0"
               >
-                Sinkronkan
+                Sync
               </button>
+            </div>
+          )}
+
+          {/* User Account Footer */}
+          <div className="p-3 border-t border-border-subtle bg-surface-card flex items-center justify-between">
+            <Link
+              href="/profil"
+              className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-85 transition-opacity"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary-light text-primary font-bold text-xs flex items-center justify-center border border-border-subtle shrink-0">
+                {initialLetter}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-semibold text-text-primary truncate">
+                  {user?.name || 'Pengguna Rupia'}
+                </span>
+                <span className="text-[11px] text-text-secondary truncate">
+                  {user?.email || 'Akun Personal'}
+                </span>
+              </div>
+            </Link>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                await signOut({ redirect: false });
+                router.push('/login');
+              }}
+              title="Keluar"
+              className="p-1.5 rounded-lg text-text-secondary hover:text-negative hover:bg-error-container/20 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ========================================================= */}
+      {/* MAIN VIEWPORT (Responsive on mobile & desktop)            */}
+      {/* ========================================================= */}
+      <div className="flex-1 md:pl-64 lg:pl-72 flex flex-col min-h-screen">
+        {/* Desktop Top Bar (Clean, art-directed header) */}
+        <header className="hidden md:flex items-center justify-between h-16 px-8 border-b border-border-subtle bg-surface-card/80 backdrop-blur-sm sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <h1 className="text-base font-semibold text-text-primary tracking-tight">
+              {getPageTitle()}
+            </h1>
+            <span className="text-xs text-text-secondary px-2.5 py-0.5 rounded-full bg-surface-container border border-border-subtle font-normal">
+              {currentDateFormatted}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Balance Mask Pill */}
+            <button
+              type="button"
+              onClick={toggleBalanceHidden}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-secondary bg-surface-container-low hover:bg-surface-container border border-border-subtle transition-colors"
+            >
+              {isBalanceHidden ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-attention" />
+                  <span>Saldo Tersembunyi</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-text-secondary" />
+                  <span>Sembunyikan Saldo</span>
+                </>
+              )}
+            </button>
+
+            {/* Notification Bell */}
+            <Link
+              href="/notifikasi"
+              className="relative p-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-low border border-border-subtle transition-colors"
+              title="Notifikasi"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadNotifsCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-negative ring-2 ring-white" />
+              )}
+            </Link>
+
+            {/* User Profile Pill */}
+            <Link
+              href="/profil"
+              className="w-8 h-8 rounded-full bg-primary-light text-primary font-bold text-xs flex items-center justify-center border border-border-subtle hover:ring-2 hover:ring-primary/20 transition-all"
+            >
+              {initialLetter}
+            </Link>
+          </div>
+        </header>
+
+        {/* Mobile Top Header (Visible on phone < md) */}
+        <header className="md:hidden sticky top-0 w-full z-40 pt-safe bg-surface-card/95 backdrop-blur-md border-b border-border-subtle">
+          <div className="h-14 px-4 flex items-center justify-between">
+            <Link href="/beranda" className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white font-bold shadow-xs">
+                <Wallet className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm font-bold tracking-tight text-text-primary">Rupia</span>
+            </Link>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={toggleBalanceHidden}
+                aria-label="Sembunyikan atau tampilkan saldo"
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary transition-colors"
+              >
+                {isBalanceHidden ? <EyeOff className="w-4 h-4 text-attention" /> : <Eye className="w-4 h-4" />}
+              </button>
+
+              <Link
+                href="/notifikasi"
+                className="relative w-9 h-9 flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadNotifsCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-negative ring-2 ring-white" />
+                )}
+              </Link>
+
+              <Link
+                href="/profil"
+                className="w-7 h-7 ml-1 rounded-full bg-primary-light text-primary font-bold text-xs flex items-center justify-center border border-border-subtle"
+              >
+                {initialLetter}
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* Offline Banner for Mobile */}
+        {!isOnline && (
+          <div className="md:hidden bg-tertiary-container text-text-primary px-4 py-2 text-xs flex items-center justify-between sticky top-14 z-30 border-b border-border-subtle">
+            <span className="flex items-center gap-1.5 font-medium text-[11px]">
+              <WifiOff className="w-3.5 h-3.5 text-attention" />
+              Offline. Draft tersimpan di memori perangkat.
+            </span>
+            {offlineDrafts.length > 0 && (
+              <span className="bg-surface-card px-1.5 py-0.5 rounded text-[10px] font-bold border border-border-subtle">
+                {offlineDrafts.length}
+              </span>
             )}
           </div>
         )}
 
         {/* Main Content Body */}
-        <main className="flex-1 px-margin pt-4">{children}</main>
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6 md:py-8 pb-28 md:pb-12">
+          {children}
+        </main>
 
-        {/* Mobile Bottom Navigation Bar (Stitch Approved Spec) */}
-        <nav
-          className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-40 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.05)] border-t border-surface-variant/40"
-          data-active-classes="text-primary font-semibold"
-        >
-          <div className="h-16 px-space-sm flex items-center justify-around">
-            {navItems.map((item) => {
+        {/* Mobile Bottom Navigation Bar (Fixed 5 items on phone) */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 pb-safe bg-surface-card/95 backdrop-blur-lg border-t border-border-subtle shadow-xs">
+          <div className="h-16 px-2 flex items-center justify-around">
+            {mobileNavItems.map((item) => {
+              const Icon = item.icon;
               const isActive = pathname === item.href;
 
               if (item.isAdd) {
@@ -179,9 +389,9 @@ export default function MobileShell({
                       type="button"
                       onClick={() => setIsQuickAddOpen(true)}
                       aria-label="Catat Transaksi Cepat"
-                      className="w-13 h-13 min-w-[52px] min-h-[52px] rounded-full bg-primary-container text-on-primary shadow-[0_8px_20px_-2px_rgba(22,122,85,0.35)] flex items-center justify-center active:scale-95 transition-transform"
+                      className="w-12 h-12 rounded-full bg-primary text-white shadow-sm flex items-center justify-center active:scale-95 transition-transform"
                     >
-                      <span className="material-symbols-outlined text-[28px]">add</span>
+                      <Plus className="w-5 h-5 text-white" />
                     </button>
                   </div>
                 );
@@ -191,19 +401,11 @@ export default function MobileShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-0.5 transition-colors ${
-                    isActive
-                      ? 'text-primary font-semibold'
-                      : 'text-on-surface-variant hover:text-on-surface'
+                  className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] gap-1 transition-colors ${
+                    isActive ? 'text-primary font-semibold' : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
-                  <span
-                    className={`material-symbols-outlined text-[24px] ${
-                      isActive ? 'fill' : ''
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-text-secondary'}`} />
                   <span className="text-[10px] tracking-tight">{item.label}</span>
                 </Link>
               );
@@ -211,7 +413,7 @@ export default function MobileShell({
           </div>
         </nav>
 
-        {/* Quick Add Bottom Sheet */}
+        {/* Quick Add Bottom Sheet Modal */}
         <QuickAddSheet
           isOpen={isQuickAddOpen}
           onClose={() => setIsQuickAddOpen(false)}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, Sparkles } from 'lucide-react';
+import { ShieldCheck, RefreshCw, AlertCircle, Wallet, ArrowRight } from 'lucide-react';
 
 function GoogleIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
@@ -35,7 +35,6 @@ function LoginFormContent() {
   const [devLoading, setDevLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Check for error in query string
   useEffect(() => {
     const error = searchParams.get('error');
     if (error) {
@@ -67,7 +66,6 @@ function LoginFormContent() {
     }
   };
 
-  // Local Dev / Demo Helper when Google credentials are not set up
   const handleDevGoogleLogin = async () => {
     try {
       setErrorMessage(null);
@@ -97,45 +95,42 @@ function LoginFormContent() {
   };
 
   return (
-    <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 relative overflow-hidden">
-      {/* Top Emerald Ambient Accent */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary-container via-primary to-primary-fixed" />
-
+    <div className="w-full max-w-sm bg-surface-card border border-border-subtle rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
       {/* Brand Header */}
       <div className="text-center space-y-3">
-        <div className="w-16 h-16 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center mx-auto shadow-lg shadow-primary-container/20 ring-4 ring-primary-container/10">
-          <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-            account_balance_wallet
-          </span>
+        <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center mx-auto shadow-xs">
+          <Wallet className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-on-surface tracking-tight">Rupia</h1>
-          <p className="text-xs text-on-surface-variant font-medium mt-1">Know your money. Own your future.</p>
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">Rupia</h1>
+          <p className="text-xs text-text-secondary mt-1 max-w-[260px] mx-auto leading-relaxed">
+            Manajemen finansial pribadi yang tenang, presisi, dan terpercaya.
+          </p>
         </div>
       </div>
 
-      {/* Error Callout */}
+      {/* Error Message */}
       {errorMessage && (
-        <div className="bg-error/10 border border-error/30 text-on-surface text-xs p-3.5 rounded-2xl flex items-start gap-2.5 animate-in fade-in duration-200">
-          <AlertCircle className="w-4 h-4 text-error shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold text-error">Gagal Masuk</p>
-            <p className="text-on-surface-variant leading-relaxed">{errorMessage}</p>
+        <div className="bg-error-container border border-negative/20 text-text-primary text-xs p-3.5 rounded-xl flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 text-negative shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="font-semibold text-negative">Gagal Masuk</p>
+            <p className="text-text-secondary leading-relaxed">{errorMessage}</p>
           </div>
         </div>
       )}
 
       {/* Primary Google Login Button */}
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading || devLoading}
           aria-label="Lanjutkan dengan Google"
-          className="w-full py-3.5 px-4 bg-white hover:bg-surface border border-outline/30 text-on-surface rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-3 shadow-sm hover:shadow transition-all active:scale-[0.98] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container"
+          className="w-full py-3 px-4 bg-white hover:bg-surface-container border border-border-subtle text-text-primary rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 shadow-xs hover:shadow transition-all active:scale-[0.99] disabled:opacity-60"
         >
           {loading ? (
-            <RefreshCw className="w-5 h-5 text-primary-container animate-spin" />
+            <RefreshCw className="w-4 h-4 text-primary animate-spin" />
           ) : (
             <GoogleIcon className="w-5 h-5 shrink-0" />
           )}
@@ -144,53 +139,31 @@ function LoginFormContent() {
 
         {/* Development Mode Simulation Button */}
         {process.env.NODE_ENV !== 'production' && (
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={handleDevGoogleLogin}
-              disabled={loading || devLoading}
-              className="w-full py-2.5 px-3 bg-surface-container-low hover:bg-surface-container border border-surface-variant text-on-surface-variant hover:text-on-surface rounded-xl font-semibold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              {devLoading ? (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-              )}
-              <span>⚡ Masuk Akun Google (Simulasi Dev)</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleDevGoogleLogin}
+            disabled={loading || devLoading}
+            className="w-full py-2 px-3 bg-surface-container hover:bg-surface-container-high border border-border-subtle text-text-secondary hover:text-text-primary rounded-xl font-medium text-xs flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+          >
+            {devLoading ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <ArrowRight className="w-3.5 h-3.5 text-primary" />
+            )}
+            <span>Masuk Demo (Budi Santoso)</span>
+          </button>
         )}
       </div>
 
       {/* Security & Privacy Reassurance */}
-      <div className="bg-surface-container-low/70 border border-surface-variant/40 rounded-2xl p-3.5 space-y-2">
-        <div className="flex items-center gap-2 text-primary font-bold text-xs">
-          <ShieldCheck className="w-4 h-4 shrink-0 text-primary-container" />
-          <span>Keamanan & Privasi Terjamin</span>
+      <div className="p-3.5 bg-surface-container rounded-xl border border-border-subtle/60 text-xs space-y-1">
+        <div className="flex items-center gap-1.5 text-primary font-semibold">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          <span>Privasi &amp; Perlindungan Data</span>
         </div>
-        <p className="text-[11px] text-on-surface-variant leading-relaxed">
-          Rupia hanya meminta identitas profil dasar (nama & email). Data keuangan Anda terenkripsi dan terisolasi privat. Kami tidak pernah membagikan data Anda ke pihak ketiga.
+        <p className="text-[11px] text-text-secondary leading-relaxed">
+          Rupia hanya mengakses profil dasar (nama &amp; email) untuk otentikasi. Data finansial Anda terenkripsi dan tidak pernah dibagikan kepada pihak ketiga.
         </p>
-      </div>
-
-      {/* Feature Highlights */}
-      <div className="pt-2 grid grid-cols-2 gap-2 text-[11px] text-on-surface-variant">
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-primary-container shrink-0" />
-          <span>Multi-Dompet Otomatis</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-primary-container shrink-0" />
-          <span>OCR Nota Cerdas</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-primary-container shrink-0" />
-          <span>Skor Finansial ATS</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-primary-container shrink-0" />
-          <span>Asisten AI Finansial</span>
-        </div>
       </div>
     </div>
   );
@@ -198,12 +171,12 @@ function LoginFormContent() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-surface text-on-surface flex flex-col justify-center items-center px-4 py-8 relative">
+    <div className="min-h-screen bg-app-bg text-text-primary flex flex-col justify-center items-center px-4 py-8">
       <Suspense
         fallback={
-          <div className="w-full max-w-sm bg-surface-container-lowest rounded-3xl p-8 shadow-xl flex flex-col items-center justify-center space-y-4">
-            <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-xs text-on-surface-variant font-medium">Memuat Rupia...</p>
+          <div className="w-full max-w-sm bg-surface-card rounded-2xl p-8 border border-border-subtle shadow-sm flex flex-col items-center justify-center space-y-3">
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
+            <p className="text-xs text-text-secondary font-medium">Memuat Rupia...</p>
           </div>
         }
       >

@@ -224,18 +224,20 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm flex items-end justify-center">
-        <div className="w-full max-w-md bg-surface-container-lowest border-t border-surface-variant/40 rounded-t-3xl max-h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200 shadow-2xl">
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
+        <div className="w-full max-w-md bg-surface-card rounded-t-2xl sm:rounded-2xl max-h-[92vh] flex flex-col shadow-xl border border-border-subtle overflow-hidden">
           
           {/* Header */}
-          <div className="p-4 pb-2 flex items-center justify-between border-b border-surface-variant/30">
+          <div className="p-4 flex items-center justify-between border-b border-border-subtle">
             {/* Action Mode Toggle Pills */}
-            <div className="flex bg-surface-container-high p-1 rounded-xl gap-1 text-xs font-semibold">
+            <div className="flex bg-surface-container p-1 rounded-xl gap-1 text-xs font-medium">
               <button
                 type="button"
                 onClick={() => setActiveTab('EXPENSE')}
                 className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'EXPENSE' ? 'bg-error text-white font-bold shadow-xs' : 'text-on-surface-variant hover:text-on-surface'
+                  activeTab === 'EXPENSE'
+                    ? 'bg-negative text-white font-semibold shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <ArrowDownLeft className="w-3.5 h-3.5" /> Pengeluaran
@@ -244,7 +246,9 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
                 type="button"
                 onClick={() => setActiveTab('INCOME')}
                 className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'INCOME' ? 'bg-primary text-white font-bold shadow-xs' : 'text-on-surface-variant hover:text-on-surface'
+                  activeTab === 'INCOME'
+                    ? 'bg-positive text-white font-semibold shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <ArrowUpRight className="w-3.5 h-3.5" /> Pemasukan
@@ -253,7 +257,9 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
                 type="button"
                 onClick={() => setActiveTab('TRANSFER')}
                 className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'TRANSFER' ? 'bg-secondary text-white font-bold shadow-xs' : 'text-on-surface-variant hover:text-on-surface'
+                  activeTab === 'TRANSFER'
+                    ? 'bg-primary-dark text-white font-semibold shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <ArrowRightLeft className="w-3.5 h-3.5" /> Transfer
@@ -262,7 +268,7 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
 
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-outline hover:text-on-surface"
+              className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -272,20 +278,22 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
             {/* Quick Action Shortcuts: Live Scan & CSV Import */}
             <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => setIsCameraModalOpen(true)}
-                className="bg-surface-container-low hover:bg-surface-container border border-surface-variant/40 p-2.5 rounded-xl flex items-center gap-2 text-xs font-medium text-primary-container active:scale-98 shadow-xs"
+                className="bg-surface-container hover:bg-surface-container-high border border-border-subtle p-2.5 rounded-xl flex items-center gap-2 text-xs font-medium text-primary transition-colors shadow-xs"
               >
-                <Camera className="w-4 h-4 text-primary-container" />
-                <span>Pindai Nota (Live Camera)</span>
+                <Camera className="w-4 h-4 text-primary" />
+                <span>Pindai Nota / Struk</span>
               </button>
               <button
+                type="button"
                 onClick={() => {
                   window.location.href = '/impor';
                   onClose();
                 }}
-                className="bg-surface-container-low hover:bg-surface-container border border-surface-variant/40 p-2.5 rounded-xl flex items-center gap-2 text-xs font-medium text-secondary active:scale-98 shadow-xs"
+                className="bg-surface-container hover:bg-surface-container-high border border-border-subtle p-2.5 rounded-xl flex items-center gap-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors shadow-xs"
               >
-                <FileSpreadsheet className="w-4 h-4 text-secondary" />
+                <FileSpreadsheet className="w-4 h-4 text-text-secondary" />
                 <span>Impor File CSV</span>
               </button>
             </div>
@@ -294,26 +302,28 @@ export default function QuickAddSheet({ isOpen, onClose, onSuccess }: QuickAddSh
             <div className="relative">
               <input
                 type="text"
-                placeholder='Ketik bebas: "Kopi 22rb GoPay" atau "Bensin 50k Mandiri"...'
+                placeholder='Ketik bebas: "Kopi 25rb GoPay" atau "Bensin 50k Mandiri"...'
                 value={naturalText}
                 onChange={(e) => setNaturalText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleNaturalLanguageParse()}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface placeholder:text-outline pr-10 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 shadow-xs"
+                className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-xs text-text-primary placeholder:text-text-secondary pr-10 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs"
               />
               <button
                 type="button"
                 onClick={handleNaturalLanguageParse}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary-container hover:text-primary p-1"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-primary-dark p-1"
                 title="Tafsirkan Teks"
               >
                 <Sparkles className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Prominent Amount Display - Deep Forest Luxury Obsidian */}
-            <div className="bg-inverse-surface rounded-2xl p-4 border border-surface-variant/20 text-center shadow-inner">
-              <span className="text-xs text-surface-dim block mb-1">Nominal Transaksi</span>
-              <div className="text-3xl font-bold font-mono text-surface-bright tracking-tight">
+            {/* Prominent Amount Display (Matte Dark Banking Card) */}
+            <div className="bg-card-dark text-white rounded-2xl p-4 border border-white/10 text-center shadow-xs">
+              <span className="text-[11px] text-white/70 uppercase tracking-wider block mb-1">
+                Nominal Transaksi
+              </span>
+              <div className="text-3xl font-bold tabular-nums text-white tracking-tight">
                 {formatRupiah(currentAmount)}
               </div>
             </div>

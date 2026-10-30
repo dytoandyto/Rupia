@@ -11,15 +11,19 @@
   body {
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
-    background-color: #f1fcf5;
-    color: #141e1a;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #F6F7F4;
+    color: #202722;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
   }
   .pt-safe {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: max(env(safe-area-inset-top, 0px), 12px);
   }
 }
 

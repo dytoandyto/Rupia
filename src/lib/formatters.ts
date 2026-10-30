@@ -3,7 +3,8 @@
  * Implements strict Asia/Jakarta timezone and Indonesian currency conventions.
  */
 
-export function formatRupiah(amount: number | bigint): string {
+export function formatRupiah(amount: number | bigint, isHidden: boolean = false): string {
+  if (isHidden) return 'Rp ••••••';
   const num = typeof amount === 'bigint' ? Number(amount) : amount;
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',

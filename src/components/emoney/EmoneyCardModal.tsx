@@ -257,12 +257,12 @@ export default function EmoneyCardModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto relative">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
+      <div className="w-full max-w-sm bg-white border border-border-subtle rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-variant flex items-center justify-center text-on-surface-variant absolute top-4 right-4 z-10 transition-colors"
+          className="w-8 h-8 rounded-full bg-surface-base hover:bg-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary absolute top-4 right-4 z-10 transition-colors"
           aria-label="Tutup"
         >
           <X className="w-4 h-4" />
@@ -288,7 +288,7 @@ export default function EmoneyCardModal({
           </div>
 
           {/* Card Number / Last 4 */}
-          <div className="font-mono text-sm tracking-widest text-white/80 mb-2">
+          <div className="tabular-nums text-sm tracking-widest text-white/80 mb-2">
             •••• •••• •••• {wallet.cardLast4 || '8821'}
           </div>
 
@@ -298,7 +298,7 @@ export default function EmoneyCardModal({
               <span className="text-[10px] text-white/70 block uppercase tracking-wider font-semibold">
                 Saldo Tersedia
               </span>
-              <span className="text-2xl font-black font-mono tracking-tight text-white">
+              <span className="text-2xl font-bold tabular-nums tracking-tight text-white">
                 {formatRupiah(wallet.recordedBalance)}
               </span>
             </div>
@@ -316,15 +316,15 @@ export default function EmoneyCardModal({
         </div>
 
         {/* Last Verified Information Pill */}
-        <div className="flex items-center justify-between bg-surface-container-low px-3.5 py-2 rounded-xl text-[11px] text-on-surface-variant">
+        <div className="flex items-center justify-between bg-surface-base px-3.5 py-2.5 rounded-xl text-xs text-text-secondary border border-border-subtle">
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-primary-container shrink-0" />
+            <Clock className="w-3.5 h-3.5 text-primary-forest shrink-0" />
             <span>
               Verifikasi:{' '}
               {wallet.lastReconciledAt ? formatRelativeDateIndo(wallet.lastReconciledAt) : 'Belum pernah'}
             </span>
           </div>
-          <span className="text-[10px] font-bold text-primary-container bg-primary-fixed/40 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-semibold text-primary-forest bg-primary-light px-2 py-0.5 rounded-full">
             Tersinkron
           </span>
         </div>
@@ -332,18 +332,18 @@ export default function EmoneyCardModal({
         {/* Tab Navigation / Sub-actions */}
         {activeTab === 'ACTIONS' && (
           <div className="space-y-3 pt-1">
-            <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider">Aksi Cepat Kartu</h4>
+            <h4 className="text-xs font-semibold text-text-primary uppercase tracking-wider">Aksi Cepat Kartu</h4>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setActiveTab('TOPUP')}
-                className="p-3 bg-surface-container-low hover:bg-surface-container border border-surface-variant/40 rounded-2xl flex flex-col items-center gap-2 text-center transition-all active:scale-95"
+                className="p-3 bg-surface-base hover:bg-white border border-border-subtle rounded-2xl flex flex-col items-center gap-2 text-center transition-all active:scale-95 shadow-xs"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary-container text-on-primary flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-primary-light text-primary-forest flex items-center justify-center">
                   <ArrowDownLeft className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="font-bold text-xs text-on-surface">Top-Up Saldo</p>
-                  <p className="text-[10px] text-on-surface-variant">Transfer dari GoPay / Bank</p>
+                  <p className="font-semibold text-xs text-text-primary">Top-Up Saldo</p>
+                  <p className="text-[10px] text-text-secondary">Transfer dari GoPay / Bank</p>
                 </div>
               </button>
 

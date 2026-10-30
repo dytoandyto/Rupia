@@ -5,17 +5,19 @@ import Link from 'next/link';
 import {
   Target,
   Plus,
-  ChevronLeft,
   Calendar,
   CheckCircle2,
   TrendingUp,
   X,
   RefreshCw,
+  PiggyBank,
 } from 'lucide-react';
 import MobileShell from '@/components/layout/MobileShell';
 import { formatRupiah } from '@/lib/formatters';
+import { useBalancePrivacy } from '@/lib/privacy-context';
 
 export default function TargetPage() {
+  const { isBalanceHidden } = useBalancePrivacy();
   const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -71,6 +73,7 @@ export default function TargetPage() {
       if (res.ok) {
         setIsAddModalOpen(false);
         setName('');
+        setTargetAmount(10000000);
         loadGoals();
       }
     } catch (err) {
@@ -80,19 +83,20 @@ export default function TargetPage() {
     }
   };
 
-  const handleContributeSubmit = async () => {
-    if (!contributingGoal) return;
-    const amt = parseInt(contributionAmount.replace(/[^0-9]/g, ''), 10) || 0;
-    if (amt <= 0) return;
+  const handleContribute = async () => {
+    const amount = parseInt(contributionAmount, 10);
+    if (!contributingGoal || !amount || amount <= 0) {
+      alert('Masukkan nominal setoran tabungan');
+      return;
+    }
 
     try {
       const res = await fetch('/api/goals', {
-        method: 'POST',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'CONTRIBUTE',
           goalId: contributingGoal.id,
-          amount: amt,
+          addAmount: amount,
         }),
       });
 
@@ -108,103 +112,108 @@ export default function TargetPage() {
 
   return (
     <MobileShell>
-      <div className="space-y-4 pb-8">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            <Link href="/profil" className="p-1 text-outline hover:text-on-surface">
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold text-on-surface tracking-tight">Target Finansial</h1>
-              <p className="text-xs text-on-surface-variant">Rencanakan pos tabungan & masa depanmu</p>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Target Finansial &amp; Simpanan
+            </h1>
+            <p className="text-xs text-text-secondary mt-0.5">
+              Kelola dana darurat, DP properti, dan rencana pembelian masa depan.
+            </p>
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="p-2 bg-primary-container hover:bg-primary text-white font-bold rounded-xl flex items-center gap-1 text-xs active:scale-95 transition-all shadow-xs"
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl text-xs transition-colors shadow-xs"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Tambah</span>
+            <Plus className="w-4 h-4" />
+            <span>Target Baru</span>
           </button>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <RefreshCw className="w-6 h-6 text-primary-container animate-spin" />
+            <RefreshCw className="w-6 h-6 text-primary animate-spin" />
           </div>
         ) : goals.length === 0 ? (
-          <div className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-8 text-center space-y-3 shadow-xs">
-            <Target className="w-10 h-10 text-outline mx-auto" />
-            <h3 className="text-base font-bold text-on-surface">Belum Ada Target Finansial</h3>
-            <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs mx-auto">
-              Buat target seperti Dana Darurat 6 Bulan, Beli Gadget Kerja, atau DP Rumah untuk melacak progres tabunganmu.
+          <div className="p-8 sm:p-12 rounded-2xl bg-surface-card border border-border-subtle text-center space-y-3 shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-surface-container mx-auto flex items-center justify-center text-text-secondary">
+              <Target className="w-6 h-6" />
+            </div>
+            <h3 className="text-sm font-semibold text-text-primary">Belum Ada Target Finansial</h3>
+            <p className="text-xs text-text-secondary max-w-sm mx-auto leading-relaxed">
+              Tentukan target dana darurat 3-6 bulan pengeluaran atau tabungan impian untuk melacak progres akumulasi asetmu.
             </p>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="px-5 py-2.5 bg-primary-container hover:bg-primary text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+              className="px-4 py-2 bg-primary hover:bg-primary-dark text-white font-medium text-xs rounded-xl shadow-xs transition-colors inline-flex items-center gap-1.5"
             >
-              Buat Target Pertama
+              <Plus className="w-3.5 h-3.5" />
+              <span>Buat Target Pertama</span>
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {goals.map((goal) => (
               <div
                 key={goal.id}
-                className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-4 space-y-3 shadow-xs"
+                className="bg-surface-card border border-border-subtle rounded-2xl p-5 space-y-3.5 shadow-xs flex flex-col justify-between"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-bold text-sm text-on-surface">{goal.name}</h3>
-                    <span className="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5">
-                      <Calendar className="w-3 h-3 text-primary-container" />
+                    <h3 className="font-semibold text-sm text-text-primary">{goal.name}</h3>
+                    <span className="text-[11px] text-text-secondary flex items-center gap-1 mt-0.5">
+                      <Calendar className="w-3 h-3 text-primary" />
                       {goal.deadline
-                        ? `Target: ${new Date(goal.deadline).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })}`
+                        ? `Target: ${new Date(goal.deadline).toLocaleDateString('id-ID', {
+                            month: 'short',
+                            year: 'numeric',
+                          })}`
                         : 'Tanpa batas waktu'}
                     </span>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-fixed text-primary border border-primary/20">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary border border-primary/20">
                     {goal.progressPercentage}%
                   </span>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="w-full bg-surface-container-high rounded-full h-2.5 overflow-hidden">
+                {/* Restrained Progress Bar */}
+                <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-primary-container transition-all duration-300"
+                    className="h-full rounded-full bg-primary transition-all duration-300"
                     style={{ width: `${Math.min(100, goal.progressPercentage)}%` }}
                   />
                 </div>
 
-                <div className="flex justify-between text-xs">
+                <div className="flex justify-between text-xs tabular-nums">
                   <div>
-                    <span className="text-[10px] text-outline block">Terkumpul</span>
-                    <span className="font-mono font-bold text-primary-container">
-                      {formatRupiah(goal.currentAmount)}
+                    <span className="text-[10px] text-text-secondary block">Terkumpul</span>
+                    <span className="font-bold text-primary">
+                      {formatRupiah(goal.currentAmount, isBalanceHidden)}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-outline block">Target Total</span>
-                    <span className="font-mono font-bold text-on-surface">
-                      {formatRupiah(goal.targetAmount)}
+                    <span className="text-[10px] text-text-secondary block">Target Total</span>
+                    <span className="font-semibold text-text-primary">
+                      {formatRupiah(goal.targetAmount, isBalanceHidden)}
                     </span>
                   </div>
                 </div>
 
-                {/* Recommended Contribution Info */}
-                <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-variant/30 flex items-center justify-between text-[11px]">
+                {/* Contribution Action */}
+                <div className="pt-2 border-t border-border-subtle flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-on-surface-variant block">Rekomendasi Setoran:</span>
-                    <span className="font-mono font-bold text-on-surface">
-                      {formatRupiah(goal.recommendedMonthlyContribution)}/bulan
+                    <span className="text-text-secondary text-[11px] block">Saran Setoran:</span>
+                    <span className="font-semibold text-text-primary tabular-nums">
+                      {formatRupiah(goal.recommendedMonthlyContribution, isBalanceHidden)}/bln
                     </span>
                   </div>
                   <button
                     onClick={() => setContributingGoal(goal)}
-                    className="px-3 py-1.5 bg-primary-container hover:bg-primary text-white font-semibold rounded-lg shadow-xs active:scale-95 transition-all"
+                    className="px-3 py-1.5 bg-primary hover:bg-primary-dark text-white font-medium text-xs rounded-xl shadow-xs transition-colors"
                   >
-                    + Nabung
+                    + Tabung
                   </button>
                 </div>
               </div>
@@ -215,99 +224,128 @@ export default function TargetPage() {
 
       {/* Add Goal Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-sm text-on-surface">Buat Target Finansial</h4>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-outline hover:text-on-surface">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-surface-card border border-border-subtle rounded-2xl p-6 space-y-4 shadow-lg">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+              <h4 className="font-bold text-sm text-text-primary">Buat Target Finansial</h4>
+              <button onClick={() => setIsAddModalOpen(false)} className="text-text-secondary hover:text-text-primary">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-on-surface-variant block mb-1">Nama Target</label>
+                <label className="text-xs font-semibold text-text-primary block mb-1">Nama Target</label>
                 <input
                   type="text"
                   placeholder="Contoh: Dana Darurat 6 Bulan"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container"
+                  className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-on-surface-variant block mb-1">Target Nominal (IDR)</label>
+                <label className="text-xs font-semibold text-text-primary block mb-1">Target Nominal (IDR)</label>
                 <input
                   type="number"
                   value={targetAmount}
                   onChange={(e) => setTargetAmount(parseInt(e.target.value, 10) || 0)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-base font-bold font-mono text-primary-container focus:outline-none"
+                  className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-sm font-semibold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
+                <span className="text-xs text-text-secondary mt-1 block tabular-nums">
+                  {formatRupiah(targetAmount)}
+                </span>
               </div>
 
               <div>
-                <label className="text-xs text-on-surface-variant block mb-1">Batas Waktu (Deadline)</label>
+                <label className="text-xs font-semibold text-text-primary block mb-1">Tenggat Target (Opsional)</label>
                 <input
                   type="date"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none"
+                  className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2 border-t border-surface-variant/30">
+            <div className="flex gap-2 pt-2">
               <button
+                type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="flex-1 py-2.5 bg-surface-container-high text-on-surface-variant hover:text-on-surface text-xs font-semibold rounded-xl transition-colors"
+                className="flex-1 py-2 rounded-xl border border-border-subtle text-text-secondary text-xs font-medium hover:bg-surface-container-low"
               >
                 Batal
               </button>
               <button
+                type="button"
                 onClick={handleCreateGoal}
                 disabled={isSaving}
-                className="flex-1 py-2.5 bg-primary-container hover:bg-primary text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50"
               >
-                Simpan Target
+                {isSaving ? 'Menyimpan...' : 'Simpan Target'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add Contribution Modal */}
+      {/* Contribute Modal */}
       {contributingGoal && (
-        <div className="fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 space-y-4 shadow-2xl">
-            <h4 className="font-bold text-sm text-on-surface">Nabung ke: {contributingGoal.name}</h4>
-            <p className="text-xs text-on-surface-variant">
-              Catatan: Menambah progres target tabungan ini mencatat alokasi virtual tanpa mutasi saldo rekening real.
-            </p>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-surface-card border border-border-subtle rounded-2xl p-6 space-y-4 shadow-lg">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+              <div>
+                <h4 className="font-bold text-sm text-text-primary">Tabung ke Target</h4>
+                <p className="text-xs text-text-secondary">{contributingGoal.name}</p>
+              </div>
+              <button onClick={() => setContributingGoal(null)} className="text-text-secondary hover:text-text-primary">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-surface-container-low rounded-xl text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Terkumpul Saat Ini:</span>
+                <strong className="font-semibold tabular-nums text-text-primary">
+                  {formatRupiah(contributingGoal.currentAmount, isBalanceHidden)}
+                </strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Target Akhir:</span>
+                <span className="tabular-nums text-text-primary font-medium">
+                  {formatRupiah(contributingGoal.targetAmount, isBalanceHidden)}
+                </span>
+              </div>
+            </div>
 
             <div>
-              <label className="text-xs text-on-surface-variant block mb-1">Nominal Tambahan Tabungan (IDR)</label>
+              <label className="text-xs font-semibold text-text-primary block mb-1">
+                Nominal Setoran Tabungan (IDR)
+              </label>
               <input
                 type="number"
                 placeholder="Contoh: 500000"
                 value={contributionAmount}
                 onChange={(e) => setContributionAmount(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2.5 text-base font-bold font-mono text-primary-container focus:outline-none"
+                className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-sm font-semibold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <button
+                type="button"
                 onClick={() => setContributingGoal(null)}
-                className="flex-1 py-2.5 bg-surface-container-high text-on-surface-variant hover:text-on-surface text-xs font-semibold rounded-xl transition-colors"
+                className="flex-1 py-2 rounded-xl border border-border-subtle text-text-secondary text-xs font-medium hover:bg-surface-container-low"
               >
                 Batal
               </button>
               <button
-                onClick={handleContributeSubmit}
-                className="flex-1 py-2.5 bg-primary-container hover:bg-primary text-white font-bold text-xs rounded-xl shadow-xs transition-colors"
+                type="button"
+                onClick={handleContribute}
+                className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors"
               >
-                Konfirmasi
+                Konfirmasi Tabungan
               </button>
             </div>
           </div>
@@ -316,4 +354,3 @@ export default function TargetPage() {
     </MobileShell>
   );
 }
-

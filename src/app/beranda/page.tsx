@@ -2,6 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Camera,
+  Bot,
+  CalendarCheck,
+  CheckCircle2,
+  ArrowDownLeft,
+  ArrowUpRight,
+  TrendingUp,
+  Sparkles,
+  Info,
+} from 'lucide-react';
 import MobileShell from '@/components/layout/MobileShell';
 import FinancialOverviewCard from '@/components/dashboard/FinancialOverviewCard';
 import WalletCarousel from '@/components/dashboard/WalletCarousel';
@@ -14,9 +25,11 @@ import ReceiptCameraModal from '@/components/camera/ReceiptCameraModal';
 import EmoneyDashboardWidget from '@/components/dashboard/EmoneyDashboardWidget';
 import EmoneyCardModal from '@/components/emoney/EmoneyCardModal';
 import { formatDateIndo, formatRupiah } from '@/lib/formatters';
+import { useBalancePrivacy } from '@/lib/privacy-context';
 
 export default function BerandaPage() {
   const router = useRouter();
+  const { isBalanceHidden } = useBalancePrivacy();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
@@ -55,14 +68,13 @@ export default function BerandaPage() {
     return (
       <MobileShell>
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-3">
-          <div className="w-10 h-10 rounded-full border-3 border-primary/20 border-t-primary animate-spin" />
-          <p className="text-[12px] text-on-surface-variant font-medium">Memuat data keuangan Rupia...</p>
+          <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-xs text-text-secondary font-medium">Memuat data finansial Rupia...</p>
         </div>
       </MobileShell>
     );
   }
 
-  // Determine Greeting based on current hour in WIB
   const now = new Date();
   const currentHour = now.getHours();
   let greetingTime = 'pagi';
@@ -72,7 +84,7 @@ export default function BerandaPage() {
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Kawan';
   const currentDateStr = formatDateIndo(now);
-  const currentMonthName = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(now);
+  const currentMonthName = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(now);
 
   const income = data?.overview?.incomeThisMonth || 0;
   const expense = data?.overview?.expensesThisMonth || 0;
@@ -81,188 +93,195 @@ export default function BerandaPage() {
 
   return (
     <MobileShell user={user} unreadNotifsCount={data?.unreadNotifsCount || 0}>
-      <div className="flex flex-col w-full pb-8 space-y-5">
-        {/* 1. Greeting & Quick Tools Header (Stitch Approved) */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-[20px] font-bold text-on-surface truncate">
-                Selamat {greetingTime}, {userName}
-              </h1>
-              <span className="text-[18px]">👋</span>
-            </div>
-            <p className="text-[12px] text-on-surface-variant mt-0.5">{currentDateStr}</p>
+      <div className="space-y-6">
+        {/* Top Greeting & Action Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Selamat {greetingTime}, {userName}
+            </h1>
+            <p className="text-xs text-text-secondary mt-0.5">
+              {currentDateStr} • Dashboard Arus Kas &amp; Stabilitas Finansial
+            </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsCameraModalOpen(true)}
-              aria-label="Pindai Struk"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary text-[12px] font-semibold transition-all active:scale-95 shadow-sm border border-surface-variant/30"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-card hover:bg-surface-container border border-border-subtle text-text-primary text-xs font-medium transition-colors shadow-xs"
             >
-              <span className="material-symbols-outlined text-[18px]">document_scanner</span>
-              <span className="hidden sm:inline">Pindai</span>
+              <Camera className="w-3.5 h-3.5 text-text-secondary" />
+              <span>Pindai Struk</span>
             </button>
 
             <button
               type="button"
               onClick={() => router.push('/ai')}
-              aria-label="Tanya AI"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-container text-on-primary text-[12px] font-semibold transition-all active:scale-95 shadow-sm hover:bg-primary"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:bg-primary-dark text-white text-xs font-medium transition-colors shadow-xs"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                auto_awesome
-              </span>
+              <Bot className="w-3.5 h-3.5 text-white" />
               <span>Tanya AI</span>
             </button>
           </div>
         </div>
 
-        {/* 2. Primary Balance Hero Card (Deep Forest Luxury Aesthetic) */}
-        {data?.overview && (
-          <FinancialOverviewCard
-            totalRecordedBalance={data.overview.totalRecordedBalance}
-            availableToSpend={data.overview.availableToSpend}
-            incomeThisMonth={data.overview.incomeThisMonth}
-            expensesThisMonth={data.overview.expensesThisMonth}
-            netCashFlow={data.overview.netCashFlow}
-            atsBreakdown={data.overview.atsBreakdown}
-            onOpenQuickAdd={() => setIsQuickAddOpen(true)}
-            onOpenScanReceipt={() => setIsCameraModalOpen(true)}
-            onOpenTransfer={() => setIsQuickAddOpen(true)}
-          />
-        )}
+        {/* Responsive Multi-Column Layout (Desktop Grid 12 cols, Phone 1 col) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* ========================================================= */}
+          {/* LEFT PRIMARY COLUMN (Hero Metric, Cash Flow, Tx History)  */}
+          {/* ========================================================= */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* 1. Primary Hero Overview Card */}
+            {data?.overview && (
+              <FinancialOverviewCard
+                totalRecordedBalance={data.overview.totalRecordedBalance}
+                availableToSpend={data.overview.availableToSpend}
+                incomeThisMonth={data.overview.incomeThisMonth}
+                expensesThisMonth={data.overview.expensesThisMonth}
+                netCashFlow={data.overview.netCashFlow}
+                atsBreakdown={data.overview.atsBreakdown}
+                onOpenQuickAdd={() => setIsQuickAddOpen(true)}
+                onOpenScanReceipt={() => setIsCameraModalOpen(true)}
+                onOpenTransfer={() => setIsQuickAddOpen(true)}
+              />
+            )}
 
-        {/* 3. Daily Money Check-in Card (Gentle Habit-Building Moment) */}
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-container-lowest shadow-sm border border-surface-variant/30">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="relative w-10 h-10 rounded-xl bg-tertiary-fixed/40 text-tertiary flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                fact_check
-              </span>
-              {!data?.hasCheckedIn && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-tertiary ring-2 ring-surface-container-lowest animate-pulse" />
-              )}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[14px] font-bold text-on-surface truncate">
-                Check-in Keuangan Hari Ini
-              </span>
-              <span className="text-[12px] text-on-surface-variant truncate">
-                {data?.hasCheckedIn
-                  ? 'Sudah check-in hari ini • Catatan rapi'
-                  : 'Belum mereview pengeluaran hari ini'}
-              </span>
-            </div>
-          </div>
-
-          {data?.hasCheckedIn ? (
-            <span className="shrink-0 px-3 py-1.5 rounded-xl bg-surface-container text-primary font-semibold text-[12px] flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px]">check_circle</span> Selesai
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsCheckInOpen(true)}
-              className="shrink-0 px-3 py-1.5 rounded-xl bg-surface-container text-on-surface hover:bg-surface-container-high text-[12px] font-semibold transition-colors active:scale-95"
-            >
-              Mulai (1m)
-            </button>
-          )}
-        </div>
-
-        {/* 4. Connected Wallets & Accounts (Dompet & Rekening Terhubung) */}
-        {data?.wallets && (
-          <WalletCarousel
-            wallets={data.wallets}
-            onWalletReconciled={loadOverview}
-          />
-        )}
-
-        {/* 5. Monthly Cash Flow Summary (Arus Kas Bulan Ini) */}
-        <div className="flex flex-col space-y-2.5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[16px] font-bold text-on-surface">Arus Kas {currentMonthName}</h2>
-            <span className="text-[10px] text-primary font-bold px-2 py-0.5 rounded-full bg-primary-fixed/20">
-              {netFlow >= 0 ? `Surplus ${savingsRate > 0 ? `+${savingsRate}%` : ''}` : 'Perlu Kontrol'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2.5">
-            {/* Income */}
-            <div className="p-3 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between border border-surface-variant/30">
+            {/* 2. Monthly Cash Flow Summary Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-surface-card border border-border-subtle shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold text-on-surface-variant">Pemasukan</span>
-                <span className="material-symbols-outlined text-primary text-[16px]">arrow_downward</span>
-              </div>
-              <div className="mt-2">
-                <span className="text-[13px] text-primary block leading-tight font-bold font-mono">
-                  {formatRupiah(income)}
-                </span>
-                <span className="text-[10px] text-primary/80 mt-1 block">Bulan ini</span>
-              </div>
-            </div>
-
-            {/* Expense */}
-            <div className="p-3 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between border border-surface-variant/30">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold text-on-surface-variant">Pengeluaran</span>
-                <span className="material-symbols-outlined text-error text-[16px]">arrow_upward</span>
-              </div>
-              <div className="mt-2">
-                <span className="text-[13px] text-on-surface block leading-tight font-bold font-mono">
-                  {formatRupiah(expense)}
-                </span>
-                <span className="text-[10px] text-on-surface-variant mt-1 block">Terpakai</span>
-              </div>
-            </div>
-
-            {/* Net Flow */}
-            <div className="p-3 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between border border-surface-variant/30">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold text-on-surface-variant">Arus Kas</span>
-                <span className="material-symbols-outlined text-primary-container text-[16px]">savings</span>
-              </div>
-              <div className="mt-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-text-primary tracking-tight">
+                    Arus Kas {currentMonthName}
+                  </h3>
+                  <span className="text-[11px] text-text-secondary">
+                    Perbandingan Pemasukan vs Pengeluaran Riil
+                  </span>
+                </div>
                 <span
-                  className={`text-[13px] block leading-tight font-bold font-mono ${
-                    netFlow >= 0 ? 'text-primary' : 'text-error'
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                    netFlow >= 0
+                      ? 'bg-primary-light text-primary border border-primary/20'
+                      : 'bg-error-container text-negative border border-error/20'
                   }`}
                 >
-                  {netFlow >= 0 ? `+${formatRupiah(netFlow)}` : `-${formatRupiah(Math.abs(netFlow))}`}
-                </span>
-                <span className="text-[10px] text-primary mt-1 block">
-                  {netFlow >= 0 ? 'Aman (Surplus)' : 'Defisit'}
+                  {netFlow >= 0 ? `Surplus ${savingsRate > 0 ? `+${savingsRate}%` : ''}` : 'Defisit Pengeluaran'}
                 </span>
               </div>
+
+              <div className="grid grid-cols-3 gap-3 pt-1">
+                {/* Income */}
+                <div className="p-3 rounded-xl bg-surface-container border border-border-subtle/50">
+                  <div className="flex items-center justify-between text-text-secondary mb-1">
+                    <span className="text-[11px] font-medium">Pemasukan</span>
+                    <ArrowDownLeft className="w-3.5 h-3.5 text-positive" />
+                  </div>
+                  <span className="text-sm font-bold text-text-primary tabular-nums block">
+                    {formatRupiah(income, isBalanceHidden)}
+                  </span>
+                </div>
+
+                {/* Expense */}
+                <div className="p-3 rounded-xl bg-surface-container border border-border-subtle/50">
+                  <div className="flex items-center justify-between text-text-secondary mb-1">
+                    <span className="text-[11px] font-medium">Pengeluaran</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-negative" />
+                  </div>
+                  <span className="text-sm font-bold text-text-primary tabular-nums block">
+                    {formatRupiah(expense, isBalanceHidden)}
+                  </span>
+                </div>
+
+                {/* Net Cash Flow */}
+                <div className="p-3 rounded-xl bg-surface-container border border-border-subtle/50">
+                  <div className="flex items-center justify-between text-text-secondary mb-1">
+                    <span className="text-[11px] font-medium">Arus Bersih</span>
+                    <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span
+                    className={`text-sm font-bold tabular-nums block ${
+                      netFlow >= 0 ? 'text-positive' : 'text-negative'
+                    }`}
+                  >
+                    {netFlow >= 0
+                      ? `+${formatRupiah(netFlow, isBalanceHidden)}`
+                      : `-${formatRupiah(Math.abs(netFlow), isBalanceHidden)}`}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* 3. Budget Status Card */}
+            <BudgetProgressCard budget={data?.budgetStatus} />
+
+            {/* 4. Recent Transactions Table / List */}
+            <RecentTransactionsList
+              transactions={data?.recentTransactions || []}
+              totalCount={data?.recentTransactions?.length || 0}
+            />
+          </div>
+
+          {/* ========================================================= */}
+          {/* RIGHT SECONDARY COLUMN (Wallets, E-Money, Check-In, AI)   */}
+          {/* ========================================================= */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* 1. Daily Check-In Reminder Banner */}
+            <div className="p-4 rounded-2xl bg-surface-card border border-border-subtle shadow-xs flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-surface-container text-text-primary flex items-center justify-center shrink-0 border border-border-subtle">
+                  <CalendarCheck className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-semibold text-text-primary truncate">
+                    Evaluasi Harian (20:30 WIB)
+                  </span>
+                  <span className="text-[11px] text-text-secondary truncate">
+                    {data?.hasCheckedIn
+                      ? 'Sudah check-in hari ini • Data sinkron'
+                      : 'Evaluasi pengeluaranmu hari ini (1 menit)'}
+                  </span>
+                </div>
+              </div>
+
+              {data?.hasCheckedIn ? (
+                <span className="text-xs font-medium text-positive inline-flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-full bg-primary-light">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Selesai
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsCheckInOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-xs font-medium transition-colors shrink-0 shadow-xs"
+                >
+                  Mulai Check-In
+                </button>
+              )}
+            </div>
+
+            {/* 2. Physical E-Money Cards Widget */}
+            <EmoneyDashboardWidget
+              wallets={data?.wallets || []}
+              eMoneyAnalytics={data?.eMoneyAnalytics}
+              onOpenCardModal={(w) => setSelectedEmoneyWallet(w)}
+            />
+
+            {/* 3. Connected Wallets & Bank Accounts */}
+            {data?.wallets && (
+              <WalletCarousel
+                wallets={data.wallets}
+                onWalletReconciled={loadOverview}
+              />
+            )}
+
+            {/* 4. Rupia AI Financial Intelligence Card */}
+            {data?.aiInsight && (
+              <AiInsightWidget
+                observation={data.aiInsight.observation}
+                recommendation={data.aiInsight.recommendation}
+              />
+            )}
           </div>
         </div>
-
-        {/* 6. Physical E-Money Cards & Transit Widget */}
-        <EmoneyDashboardWidget
-          wallets={data?.wallets || []}
-          eMoneyAnalytics={data?.eMoneyAnalytics}
-          onOpenCardModal={(w) => setSelectedEmoneyWallet(w)}
-        />
-
-        {/* 7. Rupia AI Intelligent Insight Card */}
-        {data?.aiInsight && (
-          <AiInsightWidget
-            observation={data.aiInsight.observation}
-            recommendation={data.aiInsight.recommendation}
-          />
-        )}
-
-        {/* 8. Budget Section ("Status Anggaran Aktif") */}
-        <BudgetProgressCard budget={data?.budgetStatus} />
-
-        {/* 9. Recent Transactions ("Transaksi Terkini") */}
-        <RecentTransactionsList
-          transactions={data?.recentTransactions || []}
-          totalCount={data?.recentTransactions?.length || 0}
-        />
       </div>
 
       {/* E-Money Dedicated Card Management Modal */}
@@ -272,7 +291,12 @@ export default function BerandaPage() {
         onClose={() => setSelectedEmoneyWallet(null)}
         onUpdate={loadOverview}
         allWallets={data?.wallets || []}
-        categories={data?.budgetStatus?.categories?.map((c: any) => ({ id: c.categoryId, name: c.categoryName })) || []}
+        categories={
+          data?.budgetStatus?.categories?.map((c: any) => ({
+            id: c.categoryId,
+            name: c.categoryName,
+          })) || []
+        }
       />
 
       {/* Daily Check-In Sheet */}
@@ -297,12 +321,17 @@ export default function BerandaPage() {
       <ReceiptCameraModal
         isOpen={isCameraModalOpen}
         onClose={() => setIsCameraModalOpen(false)}
-        onConfirmReceipt={async (res) => {
+        onConfirmReceipt={async () => {
           setIsCameraModalOpen(false);
           loadOverview();
         }}
         wallets={data?.wallets || []}
-        categories={data?.budgetStatus?.categories?.map((c: any) => ({ id: c.categoryId, name: c.categoryName })) || []}
+        categories={
+          data?.budgetStatus?.categories?.map((c: any) => ({
+            id: c.categoryId,
+            name: c.categoryName,
+          })) || []
+        }
       />
     </MobileShell>
   );

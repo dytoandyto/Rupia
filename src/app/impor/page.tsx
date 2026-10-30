@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Upload,
-  ChevronLeft,
   FileSpreadsheet,
   CheckCircle2,
   AlertTriangle,
   RefreshCw,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import MobileShell from '@/components/layout/MobileShell';
 
@@ -68,8 +69,8 @@ export default function ImporPage() {
       } else {
         alert(json.error || 'Gagal mengimpor file');
       }
-    } catch (err) {
-      console.error('[IMPORT ERROR]', err);
+    } catch {
+      alert('Terjadi kesalahan jaringan.');
     } finally {
       setIsProcessing(false);
     }
@@ -77,26 +78,27 @@ export default function ImporPage() {
 
   return (
     <MobileShell>
-      <div className="space-y-4 pb-8">
+      <div className="space-y-6 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-2 pt-1">
-          <Link href="/profil" className="p-1 text-outline hover:text-on-surface">
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-bold text-on-surface tracking-tight">Impor Transaksi CSV</h1>
-            <p className="text-xs text-on-surface-variant">Dukungan rekening koran Mandiri & GoPay</p>
-          </div>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+            Impor Mutasi Rekening Bank (CSV)
+          </h1>
+          <p className="text-xs text-text-secondary mt-0.5">
+            Dukungan ekspor e-banking BCA, Mandiri Livin&apos;, BRImo, BNI, dan GoPay dengan deduplikasi hash otomatis.
+          </p>
         </div>
 
         {/* Upload Card */}
-        <div className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 space-y-4 shadow-xs">
+        <div className="p-6 rounded-2xl bg-surface-card border border-border-subtle shadow-xs space-y-4">
           <div>
-            <label className="text-xs text-on-surface-variant block mb-1">Pilih Dompet Tujuan Transaksi</label>
+            <label className="text-xs font-semibold text-text-primary block mb-1">
+              Pilih Dompet / Rekening Tujuan
+            </label>
             <select
               value={selectedWalletId}
               onChange={(e) => setSelectedWalletId(e.target.value)}
-              className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-xs text-on-surface focus:outline-none focus:border-primary-container"
+              className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               {wallets.map((w) => (
                 <option key={w.id} value={w.id}>
@@ -109,7 +111,7 @@ export default function ImporPage() {
           {/* File Drag / Select Box */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-outline/30 hover:border-primary-container bg-surface-container-low rounded-2xl p-6 text-center cursor-pointer transition-colors"
+            className="border-2 border-dashed border-border-subtle hover:border-primary bg-surface-container-low rounded-2xl p-8 text-center cursor-pointer transition-colors"
           >
             <input
               ref={fileInputRef}
@@ -118,12 +120,14 @@ export default function ImporPage() {
               onChange={handleFileChange}
               className="hidden"
             />
-            <FileSpreadsheet className="w-10 h-10 text-primary-container mx-auto mb-2" />
-            <span className="text-xs font-semibold text-on-surface block">
-              {file ? file.name : 'Ketuk untuk memilih file CSV'}
+            <div className="w-12 h-12 rounded-xl bg-surface-container mx-auto flex items-center justify-center text-text-secondary mb-3">
+              <FileSpreadsheet className="w-6 h-6 text-primary" />
+            </div>
+            <span className="text-xs font-semibold text-text-primary block">
+              {file ? file.name : 'Pilih atau Seret File CSV Rekening Koran'}
             </span>
-            <span className="text-[11px] text-outline mt-1 block">
-              Format: Tanggal, Keterangan, Nominal, Tipe
+            <span className="text-[11px] text-text-secondary mt-1 block">
+              Format umum: Tanggal, Deskripsi, Jumlah/Nominal, Jenis Mutasi (DB/CR)
             </span>
           </div>
 
@@ -131,47 +135,50 @@ export default function ImporPage() {
             <button
               onClick={handleUploadSubmit}
               disabled={isProcessing}
-              className="w-full py-3 bg-primary-container hover:bg-primary text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-xs disabled:opacity-40 transition-all"
+              className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 shadow-xs disabled:opacity-40 transition-colors"
             >
               {isProcessing ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
-                <Upload className="w-4 h-4 stroke-[2.5]" />
+                <Upload className="w-4 h-4" />
               )}
-              Proses & Deteksi Duplikat
+              <span>Proses &amp; Deteksi Transaksi Duplikat</span>
             </button>
           )}
         </div>
 
-        {/* Import Results Banner */}
+        {/* Results Banner */}
         {result && (
-          <div className="bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 space-y-3 shadow-xs">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-sm text-on-surface">Hasil Pemrosesan Impor</h3>
+          <div className="p-6 rounded-2xl bg-surface-card border border-border-subtle shadow-xs space-y-4">
+            <div className="flex items-center gap-2 text-positive">
+              <CheckCircle2 className="w-5 h-5" />
+              <h3 className="font-semibold text-sm text-text-primary">
+                Hasil Pemrosesan Mutasi
+              </h3>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="bg-surface-container-high p-2.5 rounded-xl border border-surface-variant/30">
-                <span className="text-[10px] text-on-surface-variant block">Total Baris</span>
-                <span className="font-bold text-on-surface text-base">{result.total}</span>
+            <div className="grid grid-cols-3 gap-3 text-center text-xs">
+              <div className="bg-surface-container p-3 rounded-xl border border-border-subtle">
+                <span className="text-[11px] text-text-secondary block">Total Baris</span>
+                <span className="font-bold text-text-primary text-base tabular-nums">{result.total}</span>
               </div>
-              <div className="bg-primary-fixed border border-primary/20 p-2.5 rounded-xl">
-                <span className="text-[10px] text-primary block">Berhasil Masuk</span>
-                <span className="font-bold text-primary text-base">{result.imported}</span>
+              <div className="bg-primary-light border border-primary/20 p-3 rounded-xl">
+                <span className="text-[11px] text-primary block">Berhasil Masuk</span>
+                <span className="font-bold text-primary text-base tabular-nums">{result.imported}</span>
               </div>
-              <div className="bg-tertiary-fixed border border-tertiary/20 p-2.5 rounded-xl">
-                <span className="text-[10px] text-on-tertiary-fixed block">Duplikat Dilewati</span>
-                <span className="font-bold text-on-tertiary-fixed text-base">{result.duplicates}</span>
+              <div className="bg-surface-container border border-border-subtle p-3 rounded-xl">
+                <span className="text-[11px] text-text-secondary block">Duplikat Dilewati</span>
+                <span className="font-bold text-text-secondary text-base tabular-nums">{result.duplicates}</span>
               </div>
             </div>
 
             <div className="pt-2 text-center">
               <Link
                 href="/transaksi"
-                className="text-xs text-primary-container font-semibold hover:underline"
+                className="text-xs text-primary font-semibold hover:underline inline-flex items-center gap-1"
               >
-                Lihat transaksi yang baru diimpor di Linimasa →
+                <span>Buka Riwayat Transaksi</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
@@ -180,4 +187,3 @@ export default function ImporPage() {
     </MobileShell>
   );
 }
-

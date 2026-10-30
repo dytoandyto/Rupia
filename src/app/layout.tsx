@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import AuthProvider from '@/components/providers/AuthProvider';
+import { PrivacyProvider } from '@/lib/privacy-context';
 import OfflineSyncIndicator from '@/components/pwa/OfflineSyncIndicator';
 import InstallPwaModal from '@/components/pwa/InstallPwaModal';
 
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#005f40',
+  themeColor: '#176B4D',
 };
 
 export default function RootLayout({
@@ -46,11 +47,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased min-h-screen bg-surface text-on-surface font-sans selection:bg-primary-container selection:text-on-primary">
+      <body className="antialiased min-h-screen bg-app-bg text-text-primary font-sans selection:bg-primary selection:text-white">
         <AuthProvider>
-          <OfflineSyncIndicator />
-          <InstallPwaModal />
-          {children}
+          <PrivacyProvider>
+            <OfflineSyncIndicator />
+            <InstallPwaModal />
+            {children}
+          </PrivacyProvider>
         </AuthProvider>
         <script
           dangerouslySetInnerHTML={{

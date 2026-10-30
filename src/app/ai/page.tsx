@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Sparkles,
   Send,
   RefreshCw,
   TrendingDown,
@@ -11,6 +10,8 @@ import {
   HelpCircle,
   Bot,
   User,
+  Sparkles,
+  PieChart,
 } from 'lucide-react';
 import MobileShell from '@/components/layout/MobileShell';
 
@@ -27,7 +28,7 @@ export default function AiPage() {
       id: 'welcome',
       role: 'assistant',
       content:
-        'Halo! Saya **Rupia AI**, asisten intelijen keuangan pribadimu.\n\nSaya memantau saldo dompet, catatan pengeluaran, dan anggaranmu secara riil. Tanyakan apapun tentang kondisi finansialmu atau pilih saran pertanyaan di bawah!',
+        'Halo! Saya **Asisten Intelijen Finansial Rupia**.\n\nSaya menganalisis saldo riil dompet, mutasi transaksi, dan batas pos anggaranmu secara faktual. Silakan ajukan pertanyaan seputar arus kas atau pilih topik analisis di bawah.',
       createdAt: new Date(),
     },
   ]);
@@ -44,11 +45,11 @@ export default function AiPage() {
   }, [messages, loading]);
 
   const quickQuestions = [
-    { text: 'Kenapa uangku cepat habis?', icon: TrendingDown },
-    { text: 'Berapa uang yang aman dipakai minggu ini?', icon: ShieldCheck },
-    { text: 'Kategori mana yang paling boros?', icon: HelpCircle },
-    { text: 'Kalau aku mengurangi kopi Rp10.000 sehari, berapa tabungan tambahanku?', icon: Coffee },
-    { text: 'Bandingkan pengeluaranku bulan ini dan bulan lalu.', icon: Sparkles },
+    { text: 'Kenapa uangku cepat habis bulan ini?', icon: TrendingDown },
+    { text: 'Berapa uang yang aman dibelanjakan minggu ini?', icon: ShieldCheck },
+    { text: 'Pos pengeluaran mana yang melampaui rencana?', icon: PieChart },
+    { text: 'Jika hemat kopi Rp15.000 sehari, berapa proyeksi tabunganku?', icon: Coffee },
+    { text: 'Bandingkan total pengeluaran bulan ini dengan bulan lalu.', icon: Sparkles },
   ];
 
   const handleSend = async (questionText?: string) => {
@@ -86,13 +87,19 @@ export default function AiPage() {
         const assistantMsg: Message = {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: 'Maaf, terjadi gangguan saat menganalisis data keuanganmu. Silakan coba lagi sebentar lagi.',
+          content: 'Maaf, terjadi kendala saat menghubungkan data ledger. Silakan coba kembali sesaat lagi.',
           createdAt: new Date(),
         };
         setMessages((prev) => [...prev, assistantMsg]);
       }
-    } catch (err) {
-      console.error('[AI CHAT ERROR]', err);
+    } catch {
+      const assistantMsg: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'Terjadi gangguan jaringan lokal saat memproses data.',
+        createdAt: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMsg]);
     } finally {
       setLoading(false);
     }
@@ -100,49 +107,52 @@ export default function AiPage() {
 
   return (
     <MobileShell>
-      <div className="flex flex-col h-[calc(100vh-140px)] justify-between">
-        {/* Chat Header */}
-        <div className="pt-1 pb-2 border-b border-surface-variant/40 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary-container/10 text-primary-container flex items-center justify-center">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-on-surface flex items-center gap-1.5">
-              Rupia AI Assistant
-              <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" />
-            </h1>
-            <p className="text-[10px] text-on-surface-variant">Intelijen Finansial Berbasis Angka Pasti</p>
+      <div className="flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-160px)] justify-between space-y-4 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="pb-3 border-b border-border-subtle flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center border border-border-subtle">
+              <Bot className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold text-text-primary tracking-tight">
+                Asisten Analisis Finansial
+              </h1>
+              <span className="text-[11px] text-text-secondary">
+                Dianalisis berbasis data riil mutasi dan saldo tercatat
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Messages Scroll Area */}
-        <div className="flex-1 overflow-y-auto py-3 space-y-3.5 pr-1">
+        {/* Messages Stream */}
+        <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 scrollbar-none">
           {messages.map((m) => {
             const isUser = m.role === 'user';
             return (
               <div
                 key={m.id}
-                className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
               >
                 {!isUser && (
-                  <div className="w-7 h-7 rounded-full bg-primary-fixed text-primary flex items-center justify-center shrink-0 mt-0.5 border border-primary/20">
-                    <Bot className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0 mt-0.5 border border-primary/20">
+                    <Bot className="w-3.5 h-3.5" />
                   </div>
                 )}
 
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed ${
+                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs leading-relaxed ${
                     isUser
-                      ? 'bg-primary-container text-white font-medium rounded-tr-none shadow-xs'
-                      : 'bg-surface-container-lowest text-on-surface border border-surface-variant/40 rounded-tl-none space-y-1 shadow-xs'
+                      ? 'bg-primary text-white rounded-tr-none shadow-xs font-medium'
+                      : 'bg-surface-card text-text-primary border border-border-subtle rounded-tl-none shadow-xs'
                   }`}
                 >
                   <div className="whitespace-pre-wrap">{m.content}</div>
                 </div>
 
                 {isUser && (
-                  <div className="w-7 h-7 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0 mt-0.5 border border-secondary/20">
-                    <User className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-lg bg-surface-container text-text-secondary flex items-center justify-center shrink-0 mt-0.5 border border-border-subtle">
+                    <User className="w-3.5 h-3.5" />
                   </div>
                 )}
               </div>
@@ -150,13 +160,13 @@ export default function AiPage() {
           })}
 
           {loading && (
-            <div className="flex gap-2.5 justify-start">
-              <div className="w-7 h-7 rounded-full bg-primary-fixed text-primary flex items-center justify-center shrink-0 border border-primary/20">
-                <Bot className="w-4 h-4" />
+            <div className="flex gap-3 justify-start">
+              <div className="w-7 h-7 rounded-lg bg-primary-light text-primary flex items-center justify-center shrink-0 border border-primary/20">
+                <Bot className="w-3.5 h-3.5" />
               </div>
-              <div className="bg-surface-container-low rounded-2xl p-3 text-xs text-on-surface-variant flex items-center gap-2 border border-surface-variant/30">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary-container" />
-                <span>Rupia AI sedang menganalisis data ledger...</span>
+              <div className="bg-surface-card rounded-2xl p-3 text-xs text-text-secondary flex items-center gap-2 border border-border-subtle">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Menganalisis catatan keuangan...</span>
               </div>
             </div>
           )}
@@ -164,8 +174,8 @@ export default function AiPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Suggestion Pills */}
-        <div className="py-2 flex gap-1.5 overflow-x-auto scrollbar-none">
+        {/* Suggested Queries */}
+        <div className="py-1 flex gap-2 overflow-x-auto scrollbar-none">
           {quickQuestions.map((q, idx) => {
             const Icon = q.icon;
             return (
@@ -173,9 +183,9 @@ export default function AiPage() {
                 key={idx}
                 type="button"
                 onClick={() => handleSend(q.text)}
-                className="bg-surface-container-lowest hover:bg-surface-container-low border border-surface-variant/40 px-2.5 py-1.5 rounded-xl text-[11px] font-medium text-on-surface-variant whitespace-nowrap flex items-center gap-1.5 active:scale-95 transition-all shrink-0 shadow-xs"
+                className="bg-surface-card hover:bg-surface-container border border-border-subtle px-3 py-1.5 rounded-xl text-xs font-medium text-text-secondary hover:text-text-primary whitespace-nowrap flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
               >
-                <Icon className="w-3.5 h-3.5 text-primary-container" />
+                <Icon className="w-3.5 h-3.5 text-primary" />
                 <span>{q.text}</span>
               </button>
             );
@@ -193,17 +203,17 @@ export default function AiPage() {
           >
             <input
               type="text"
-              placeholder="Tanya kondisi keuanganmu..."
+              placeholder="Ajukan pertanyaan mengenai pengeluaran atau anggaranmu..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="flex-1 bg-surface-container-lowest border border-outline/20 rounded-2xl px-4 py-3 text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 shadow-xs"
+              className="flex-1 bg-surface-card border border-border-subtle rounded-xl px-4 py-2.5 text-xs text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs"
             />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="w-12 h-12 bg-primary-container hover:bg-primary active:scale-95 text-white font-bold rounded-2xl flex items-center justify-center shadow-xs disabled:opacity-40 transition-transform"
+              className="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-xl flex items-center justify-center shadow-xs disabled:opacity-40 transition-colors"
             >
-              <Send className="w-4 h-4 stroke-[2.5]" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
         </div>
@@ -211,4 +221,3 @@ export default function AiPage() {
     </MobileShell>
   );
 }
-

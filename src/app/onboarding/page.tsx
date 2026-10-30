@@ -3,12 +3,11 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  CheckCircle2,
   Wallet,
   PieChart,
   CalendarCheck,
   ArrowRight,
-  Sparkles,
+  CheckCircle2,
   RefreshCw,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/formatters';
@@ -18,31 +17,32 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Step 2: Wallets setup
+  // Step 1: Wallets setup
   const [mandiriBalance, setMandiriBalance] = useState('5000000');
   const [gopayBalance, setGopayBalance] = useState('500000');
   const [cashBalance, setCashBalance] = useState('250000');
 
-  // Step 3: Budget
+  // Step 2: Budget
   const [monthlyBudgetLimit, setMonthlyBudgetLimit] = useState('4000000');
 
-  // Step 4: Daily Reminder
+  // Step 3: Daily Reminder
   const [reminderTime, setReminderTime] = useState('20:30');
 
   const handleFinishOnboarding = async () => {
     setIsSubmitting(true);
     try {
-      // 1. Update balances on starter wallets or create
       const walletsRes = await fetch('/api/wallets');
       const walletsData = await walletsRes.json();
       const existingWallets = walletsData.wallets || [];
 
-      // Update or reconcile initial wallets with user's starting balance
       for (const w of existingWallets) {
         let bal = 0;
-        if (w.name.toLowerCase().includes('mandiri')) bal = parseInt(mandiriBalance, 10) || 0;
-        else if (w.name.toLowerCase().includes('gopay')) bal = parseInt(gopayBalance, 10) || 0;
-        else if (w.name.toLowerCase().includes('tunai') || w.name.toLowerCase().includes('cash')) bal = parseInt(cashBalance, 10) || 0;
+        if (w.name.toLowerCase().includes('mandiri') || w.name.toLowerCase().includes('bca'))
+          bal = parseInt(mandiriBalance, 10) || 0;
+        else if (w.name.toLowerCase().includes('gopay'))
+          bal = parseInt(gopayBalance, 10) || 0;
+        else if (w.name.toLowerCase().includes('tunai') || w.name.toLowerCase().includes('cash'))
+          bal = parseInt(cashBalance, 10) || 0;
 
         if (bal > 0) {
           await fetch(`/api/wallets/${w.id}/reconcile`, {
@@ -53,7 +53,6 @@ export default function OnboardingPage() {
         }
       }
 
-      // 2. Setup initial monthly budget
       const now = new Date();
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
@@ -83,10 +82,8 @@ export default function OnboardingPage() {
         });
       }
 
-      // Finish and redirect to Beranda
       router.push('/beranda');
-    } catch (err) {
-      console.error('[ONBOARDING ERROR]', err);
+    } catch {
       router.push('/beranda');
     } finally {
       setIsSubmitting(false);
@@ -94,70 +91,70 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface flex flex-col justify-center items-center px-4 py-8">
-      <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-6 shadow-xl space-y-6">
-        
-        {/* Progress Dots */}
-        <div className="flex justify-between items-center text-xs text-on-surface-variant">
-          <span className="font-semibold text-primary-container">Langkah {step} dari 3</span>
+    <div className="min-h-screen bg-app-bg text-text-primary flex flex-col justify-center items-center px-4 py-8">
+      <div className="w-full max-w-sm bg-surface-card border border-border-subtle rounded-2xl p-6 sm:p-7 shadow-sm space-y-6">
+        {/* Progress Header */}
+        <div className="flex justify-between items-center text-xs">
+          <span className="font-semibold text-primary">Langkah {step} dari 3</span>
           <button
             onClick={() => router.push('/beranda')}
-            className="text-outline hover:text-on-surface text-xs font-medium"
+            className="text-text-secondary hover:text-text-primary font-medium"
           >
             Lewati Setup →
           </button>
         </div>
 
-        {/* STEP 1: WELCOME & WALLET BALANCES */}
+        {/* STEP 1: INITIAL BALANCES */}
         {step === 1 && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center mx-auto mb-2">
-                <Wallet className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl bg-primary-light text-primary flex items-center justify-center mx-auto mb-2 border border-primary/20">
+                <Wallet className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-bold text-on-surface">Berapa Saldo Awalmu?</h2>
-              <p className="text-xs text-on-surface-variant">
-                Masukkan saldo awal perkiraan di akun utama agar Available-to-Spend langsung aktif.
+              <h2 className="text-base font-bold text-text-primary">Berapa Saldo Awalmu?</h2>
+              <p className="text-xs text-text-secondary">
+                Saldo awal digunakan untuk menghitung batas Available-to-Spend secara akurat.
               </p>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
               <div>
-                <label className="text-xs text-on-surface-variant block mb-1">Bank Mandiri (Livin)</label>
+                <label className="text-xs text-text-secondary block mb-1">Rekening Bank Utama (IDR)</label>
                 <input
                   type="number"
                   value={mandiriBalance}
                   onChange={(e) => setMandiriBalance(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-sm font-mono font-bold text-primary-container focus:outline-none focus:border-primary-container"
+                  className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-sm font-semibold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-on-surface-variant block mb-1">E-Wallet GoPay</label>
+                <label className="text-xs text-text-secondary block mb-1">E-Wallet (GoPay / OVO)</label>
                 <input
                   type="number"
                   value={gopayBalance}
                   onChange={(e) => setGopayBalance(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-sm font-mono font-bold text-primary-container focus:outline-none focus:border-primary-container"
+                  className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-sm font-semibold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-on-surface-variant block mb-1">Dompet Uang Tunai (Cash)</label>
+                <label className="text-xs text-text-secondary block mb-1">Kas Tunai (Dompet Fisik)</label>
                 <input
                   type="number"
                   value={cashBalance}
                   onChange={(e) => setCashBalance(e.target.value)}
-                  className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-sm font-mono font-bold text-primary-container focus:outline-none focus:border-primary-container"
+                  className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-sm font-semibold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
             </div>
 
             <button
               onClick={() => setStep(2)}
-              className="w-full py-3 bg-primary-container hover:bg-primary text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs mt-4 transition-colors"
+              className="w-full py-2.5 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs mt-4 transition-colors"
             >
-              Lanjut ke Anggaran <ArrowRight className="w-4 h-4" />
+              <span>Lanjut ke Anggaran</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
@@ -166,47 +163,50 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center mx-auto mb-2">
-                <PieChart className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl bg-surface-container text-text-primary flex items-center justify-center mx-auto mb-2 border border-border-subtle">
+                <PieChart className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-bold text-on-surface">Target Batas Belanja</h2>
-              <p className="text-xs text-on-surface-variant">
-                Berapa batas pengeluaran maksimal yang kamu rencanakan untuk bulan ini?
+              <h2 className="text-base font-bold text-text-primary">Batas Anggaran Bulanan</h2>
+              <p className="text-xs text-text-secondary">
+                Rencana pengeluaran maksimal agar tidak mengalami defisit di akhir bulan.
               </p>
             </div>
 
-            <div className="pt-2">
-              <label className="text-xs text-on-surface-variant block mb-1">Batas Anggaran Bulanan (IDR)</label>
+            <div className="pt-1">
+              <label className="text-xs text-text-secondary block mb-1">
+                Batas Pengeluaran Bulan Ini (IDR)
+              </label>
               <input
                 type="number"
                 value={monthlyBudgetLimit}
                 onChange={(e) => setMonthlyBudgetLimit(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2.5 text-lg font-mono font-bold text-primary-container focus:outline-none focus:border-primary-container"
+                className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2.5 text-base font-bold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-              <span className="text-[11px] text-outline mt-1 block">
+              <span className="text-xs text-text-secondary mt-1 block tabular-nums">
                 {formatRupiah(parseInt(monthlyBudgetLimit, 10) || 0)}
               </span>
             </div>
 
-            <div className="p-3 bg-surface-container-low rounded-xl border border-surface-variant/30 text-xs text-on-surface space-y-1">
-              <span className="font-semibold text-primary-container block">💡 Aturan 50/30/20 Otomatis:</span>
-              <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                Rupia akan membagi anggaran ini secara cerdas ke pos Kebutuhan, Hiburan/Kopi, dan Tabungan.
+            <div className="p-3 bg-surface-container rounded-xl border border-border-subtle text-xs text-text-secondary space-y-1">
+              <span className="font-semibold text-text-primary block">Prinsip Alokasi Pos:</span>
+              <p className="text-[11px] leading-relaxed">
+                Rupia akan mengelompokkan anggaran ini ke dalam pos Makanan, Transportasi, Hiburan, dan Tabungan.
               </p>
             </div>
 
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 py-3 bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold rounded-xl text-xs transition-colors"
+                className="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-text-secondary hover:text-text-primary font-medium rounded-xl text-xs transition-colors border border-border-subtle"
               >
                 Kembali
               </button>
               <button
                 onClick={() => setStep(3)}
-                className="flex-2 py-3 bg-primary-container hover:bg-primary text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors"
               >
-                Lanjut ke Pengingat <ArrowRight className="w-4 h-4" />
+                <span>Lanjut</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -216,48 +216,49 @@ export default function OnboardingPage() {
         {step === 3 && (
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-2xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center mx-auto mb-2">
-                <CalendarCheck className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-xl bg-surface-container text-text-primary flex items-center justify-center mx-auto mb-2 border border-border-subtle">
+                <CalendarCheck className="w-5 h-5 text-primary" />
               </div>
-              <h2 className="text-lg font-bold text-on-surface">Disiplin Check-In Harian</h2>
-              <p className="text-xs text-on-surface-variant">
-                Pencatatan 60 detik setiap malam menjaga saldo Available-to-Spend selalu 100% akurat.
+              <h2 className="text-base font-bold text-text-primary">Jadwal Evaluasi Harian</h2>
+              <p className="text-xs text-text-secondary">
+                Evaluasi 60 detik setiap malam untuk memastikan tidak ada transaksi tunai yang terlewat.
               </p>
             </div>
 
-            <div className="pt-2">
-              <label className="text-xs text-on-surface-variant block mb-1">Jam Pengingat Harian (WIB)</label>
+            <div className="pt-1">
+              <label className="text-xs text-text-secondary block mb-1">
+                Jam Pengingat Malam (WIB)
+              </label>
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-base font-mono font-bold text-on-surface focus:outline-none focus:border-primary-container"
+                className="w-full bg-surface-container-low border border-border-subtle rounded-xl px-3 py-2 text-base font-semibold tabular-nums text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
-            <div className="p-3 bg-primary-fixed/40 rounded-xl border border-primary/20 text-xs text-primary">
-              <span className="font-bold block mb-0.5">Siap Memulai!</span>
-              Seluruh preferensi dapat diubah kapan saja di menu Profil.
+            <div className="p-3 bg-primary-light rounded-xl border border-primary/20 text-xs text-primary font-medium">
+              Preferensi dan data awal ini dapat Anda sesuaikan kapan saja melalui menu Pengaturan.
             </div>
 
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setStep(2)}
-                className="flex-1 py-3 bg-surface-container-high text-on-surface-variant hover:text-on-surface font-semibold rounded-xl text-xs transition-colors"
+                className="flex-1 py-2.5 bg-surface-container hover:bg-surface-container-high text-text-secondary hover:text-text-primary font-medium rounded-xl text-xs transition-colors border border-border-subtle"
               >
                 Kembali
               </button>
               <button
                 onClick={handleFinishOnboarding}
                 disabled={isSubmitting}
-                className="flex-2 py-3 bg-primary-container hover:bg-primary text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50 transition-colors"
+                className="flex-1 py-2.5 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50 transition-colors"
               >
                 {isSubmitting ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Sparkles className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4" />
                 )}
-                Buka Beranda Rupia
+                <span>Buka Beranda</span>
               </button>
             </div>
           </div>
@@ -266,4 +267,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

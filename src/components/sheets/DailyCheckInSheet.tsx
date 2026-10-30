@@ -61,38 +61,44 @@ export default function DailyCheckInSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end justify-center">
-      <div className="w-full max-w-md bg-slate-900 border-t border-slate-800 rounded-t-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+    <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white border border-border-subtle rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200">
         
         {/* Header */}
-        <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-              <CalendarCheck className="w-4 h-4" />
+        <div className="p-4 sm:p-5 border-b border-border-subtle flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary-light text-primary-forest flex items-center justify-center">
+              <CalendarCheck className="w-4 h-4 stroke-[2]" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-white">Check-In Keuangan Harian</h3>
-              <p className="text-[11px] text-slate-400">Pukul 20:30 Asia/Jakarta Reminder</p>
+              <h3 className="font-semibold text-sm text-text-primary">Check-In Keuangan Harian</h3>
+              <p className="text-xs text-text-secondary">Refleksi 1 menit untuk menjaga akurasi catatan</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1">
+          <button 
+            onClick={onClose} 
+            className="text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-base transition-colors"
+            aria-label="Tutup"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <div className="p-5 overflow-y-auto space-y-5 flex-1">
+        <div className="p-5 overflow-y-auto space-y-4 flex-1">
           {/* Question 1: Pemasukan Hari Ini */}
-          <div className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700/60">
-            <label className="text-xs font-semibold text-slate-200 block mb-2">
-              1. Ada pemasukan baru hari ini?
+          <div className="bg-surface-base p-4 rounded-2xl border border-border-subtle">
+            <label className="text-xs font-semibold text-text-primary block mb-2">
+              1. Apakah ada pemasukan baru hari ini?
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setHasIncome(false)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  !hasIncome ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  !hasIncome 
+                    ? 'bg-white border-border-subtle text-text-primary shadow-xs font-semibold' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
                 Tidak Ada
@@ -100,8 +106,10 @@ export default function DailyCheckInSheet({
               <button
                 type="button"
                 onClick={() => setHasIncome(true)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  hasIncome ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  hasIncome 
+                    ? 'bg-primary-forest border-primary-forest text-white font-semibold shadow-xs' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
                 Ada Pemasukan
@@ -110,25 +118,29 @@ export default function DailyCheckInSheet({
           </div>
 
           {/* Question 2: Pengeluaran Hari Ini */}
-          <div className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700/60">
-            <label className="text-xs font-semibold text-slate-200 block mb-2">
-              2. Ada transaksi pengeluaran hari ini?
+          <div className="bg-surface-base p-4 rounded-2xl border border-border-subtle">
+            <label className="text-xs font-semibold text-text-primary block mb-2">
+              2. Ada transaksi belanja atau pengeluaran hari ini?
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setHasExpenses(false)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  !hasExpenses ? 'bg-slate-700 border-slate-500 text-white' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  !hasExpenses 
+                    ? 'bg-white border-border-subtle text-text-primary shadow-xs font-semibold' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
-                Hemat (0 Transaksi)
+                Nol Pengeluaran
               </button>
               <button
                 type="button"
                 onClick={() => setHasExpenses(true)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  hasExpenses ? 'bg-rose-500/20 border-rose-500 text-rose-400 font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  hasExpenses 
+                    ? 'bg-primary-forest border-primary-forest text-white font-semibold shadow-xs' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
                 Ada Pengeluaran
@@ -137,52 +149,60 @@ export default function DailyCheckInSheet({
           </div>
 
           {/* Question 3: Transaksi Belum Dicatat */}
-          <div className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700/60">
-            <label className="text-xs font-semibold text-slate-200 block mb-2">
-              3. Apakah semua transaksi hari ini sudah tercatat di Rupia?
+          <div className="bg-surface-base p-4 rounded-2xl border border-border-subtle">
+            <label className="text-xs font-semibold text-text-primary block mb-2">
+              3. Apakah seluruh transaksi hari ini sudah dicatat?
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setHasUnrecorded(false)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  !hasUnrecorded ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  !hasUnrecorded 
+                    ? 'bg-white border-border-subtle text-positive font-semibold shadow-xs' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
-                Sudah Lengkap ✅
+                Sudah Lengkap
               </button>
               <button
                 type="button"
                 onClick={() => setHasUnrecorded(true)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  hasUnrecorded ? 'bg-amber-500/20 border-amber-500 text-amber-400 font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  hasUnrecorded 
+                    ? 'bg-attention/10 border-attention/30 text-attention font-semibold' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
-                Masih Ada Tertinggal ⚠️
+                Ada Tertinggal
               </button>
             </div>
           </div>
 
           {/* Question 4: Kesesuaian Saldo Dompet */}
-          <div className="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700/60">
-            <label className="text-xs font-semibold text-slate-200 block mb-2">
-              4. Apakah saldo akun Anda (Mandiri/GoPay/Tunai) sesuai?
+          <div className="bg-surface-base p-4 rounded-2xl border border-border-subtle">
+            <label className="text-xs font-semibold text-text-primary block mb-2">
+              4. Apakah saldo akun (Bank/e-Money/Tunai) sudah sesuai?
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setWalletReconciled(true)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  walletReconciled ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  walletReconciled 
+                    ? 'bg-white border-border-subtle text-positive font-semibold shadow-xs' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
-                Sesuai Akurat
+                Sesuai & Akurat
               </button>
               <button
                 type="button"
                 onClick={() => setWalletReconciled(false)}
-                className={`py-2 rounded-xl text-xs font-medium border ${
-                  !walletReconciled ? 'bg-amber-500/20 border-amber-500 text-amber-400 font-bold' : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                className={`py-2.5 px-3 rounded-xl text-xs font-medium border transition-colors ${
+                  !walletReconciled 
+                    ? 'bg-attention/10 border-attention/30 text-attention font-semibold' 
+                    : 'bg-transparent border-transparent text-text-secondary hover:bg-white/50'
                 }`}
               >
                 Perlu Rekonsiliasi
@@ -192,36 +212,36 @@ export default function DailyCheckInSheet({
 
           {/* Note / Reflection */}
           <div>
-            <label className="text-xs text-slate-400 block mb-1">Catatan Evaluasi Finansial Hari Ini (Opsional)</label>
+            <label className="text-xs font-medium text-text-secondary block mb-1.5">Catatan Evaluasi Singkat (Opsional)</label>
             <textarea
               rows={2}
-              placeholder="Contoh: Belanja bahan masak agak banyak untuk stok 4 hari..."
+              placeholder="Catatan kecil pengingat atau rencana keuangan besok..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full bg-surface-base border border-border-subtle rounded-xl p-3 text-xs text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-primary-forest focus:bg-white transition-all resize-none"
             />
           </div>
 
-          {/* Sisa Dana Aman Badge */}
-          <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-3 text-center">
-            <span className="text-[11px] text-emerald-300 font-medium block">Sisa Dana Aman Dipakai (ATS) Saat Ini:</span>
-            <span className="text-lg font-bold font-mono text-emerald-400">{formatRupiah(availableToSpend)}</span>
+          {/* Available to Spend Badge */}
+          <div className="bg-surface-base border border-border-subtle rounded-2xl p-3.5 flex items-center justify-between">
+            <span className="text-xs text-text-secondary font-medium">Sisa Dana Aman Dipakai (ATS):</span>
+            <span className="text-sm font-bold tabular-nums text-text-primary">{formatRupiah(availableToSpend)}</span>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-slate-900 border-t border-slate-800">
+        <div className="p-4 sm:p-5 bg-white border-t border-border-subtle">
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-2xl flex items-center justify-center gap-2 transition-transform active:scale-98 disabled:opacity-50"
+            className="w-full py-3.5 bg-primary-forest hover:bg-primary-deep text-white font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 shadow-sm"
           >
             {isSubmitting ? (
-              <RefreshCw className="w-5 h-5 animate-spin" />
+              <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
-              <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+              <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
             )}
-            Selesaikan Check-In Hari Ini
+            Selesaikan Check-In
           </button>
         </div>
       </div>

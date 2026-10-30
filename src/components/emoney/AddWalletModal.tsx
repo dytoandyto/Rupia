@@ -18,7 +18,8 @@ import { formatRupiah } from '@/lib/formatters';
 interface AddWalletModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  onCreated?: () => void;
 }
 
 const WALLET_TYPES = [
@@ -67,7 +68,7 @@ const EMONEY_PRESETS = [
   { name: 'Kartu E-Money Lainnya', issuer: 'OTHER', color: '#28332e' },
 ];
 
-export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWalletModalProps) {
+export default function AddWalletModal({ isOpen, onClose, onSuccess, onCreated }: AddWalletModalProps) {
   const [selectedType, setSelectedType] = useState<string>('EMONEY');
   const [name, setName] = useState('Mandiri e-money');
   const [issuer, setIssuer] = useState('MANDIRI');
@@ -109,7 +110,8 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
       });
 
       if (res.ok) {
-        onSuccess();
+        if (onSuccess) onSuccess();
+        if (onCreated) onCreated();
         onClose();
       } else {
         const data = await res.json();
@@ -125,26 +127,26 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto relative">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
+      <div className="w-full max-w-sm bg-white border border-border-subtle rounded-3xl p-5 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto relative">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-variant flex items-center justify-center text-on-surface-variant absolute top-4 right-4 transition-colors"
+          className="w-8 h-8 rounded-full bg-surface-base hover:bg-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary absolute top-4 right-4 transition-colors"
           aria-label="Tutup"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div>
-          <h3 className="font-extrabold text-base text-on-surface">Tambah Dompet / Kartu Baru</h3>
-          <p className="text-xs text-on-surface-variant">Lacak kartu uang elektronik, e-wallet, dan rekening</p>
+          <h3 className="font-semibold text-base text-text-primary">Tambah Dompet / Kartu Baru</h3>
+          <p className="text-xs text-text-secondary">Lacak kartu uang elektronik, e-wallet, dan rekening bank</p>
         </div>
 
         <form onSubmit={handleCreate} className="space-y-4">
           {/* Wallet Type Selector */}
           <div>
-            <label className="text-[11px] font-bold text-on-surface block mb-1.5">Pilih Jenis Dompet / Akun:</label>
+            <label className="text-xs font-semibold text-text-primary block mb-1.5">Pilih Jenis Dompet / Akun:</label>
             <div className="grid grid-cols-2 gap-2">
               {WALLET_TYPES.map((wt) => {
                 const Icon = wt.icon;
@@ -173,8 +175,8 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
                     }}
                     className={`p-2.5 rounded-2xl border text-left transition-all ${
                       isSelected
-                        ? 'bg-primary-container/10 border-primary-container ring-1 ring-primary-container'
-                        : 'bg-surface-container-low border-surface-variant/50 hover:bg-surface-container'
+                        ? 'bg-primary-light border-primary-forest text-primary-forest'
+                        : 'bg-surface-base border-border-subtle hover:bg-white text-text-secondary'
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
@@ -184,9 +186,11 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
                       >
                         <Icon className="w-3.5 h-3.5" />
                       </div>
-                      <span className="text-xs font-bold text-on-surface">{wt.label}</span>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-primary-forest' : 'text-text-primary'}`}>
+                        {wt.label}
+                      </span>
                     </div>
-                    <p className="text-[10px] text-on-surface-variant line-clamp-1">{wt.desc}</p>
+                    <p className="text-[10px] text-text-secondary line-clamp-1">{wt.desc}</p>
                   </button>
                 );
               })}
@@ -196,7 +200,7 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
           {/* E-Money Presets */}
           {selectedType === 'EMONEY' && (
             <div>
-              <label className="text-[11px] font-bold text-on-surface block mb-1.5">Pilih Penerbit Kartu:</label>
+              <label className="text-xs font-semibold text-text-primary block mb-1.5">Pilih Penerbit Kartu:</label>
               <div className="flex gap-1.5 overflow-x-auto pb-1">
                 {EMONEY_PRESETS.map((p) => {
                   const isSelected = issuer === p.issuer;
@@ -205,10 +209,10 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
                       key={p.issuer}
                       type="button"
                       onClick={() => handleSelectPreset(p)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border transition-all ${
                         isSelected
-                          ? 'bg-primary-container text-white border-primary-container shadow-xs'
-                          : 'bg-surface-container text-on-surface-variant border-surface-variant'
+                          ? 'bg-primary-forest text-white border-primary-forest shadow-xs'
+                          : 'bg-surface-base text-text-secondary border-border-subtle hover:text-text-primary'
                       }`}
                     >
                       {p.name}
@@ -221,21 +225,21 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
 
           {/* Wallet Name */}
           <div>
-            <label className="text-[11px] font-bold text-on-surface block mb-1">Nama Dompet / Label Kartu:</label>
+            <label className="text-xs font-semibold text-text-primary block mb-1">Nama Dompet / Label Kartu:</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: e-money Tol Jagorawi"
               required
-              className="w-full px-3 py-2 bg-surface border border-outline/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+              className="w-full px-3 py-2 bg-surface-base border border-border-subtle rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white transition-all font-medium"
             />
           </div>
 
           {/* 4 Digit Kartu for E-Money */}
           {selectedType === 'EMONEY' && (
             <div>
-              <label className="text-[11px] font-bold text-on-surface block mb-1">
+              <label className="text-xs font-semibold text-text-primary block mb-1">
                 4 Digit Terakhir Nomor Kartu (Opsional):
               </label>
               <input
@@ -244,9 +248,9 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
                 value={cardLast4}
                 onChange={(e) => setCardLast4(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder="Contoh: 8821"
-                className="w-full px-3 py-2 bg-surface border border-outline/30 rounded-xl text-xs font-mono text-on-surface tracking-widest"
+                className="w-full px-3 py-2 bg-surface-base border border-border-subtle rounded-xl text-xs tabular-nums text-text-primary tracking-widest focus:outline-none focus:border-primary-forest focus:bg-white transition-all"
               />
-              <span className="text-[10px] text-outline mt-0.5 block">
+              <span className="text-[10px] text-text-secondary mt-1 block">
                 Digunakan untuk membedakan kartu jika Anda memiliki lebih dari 1 kartu sejenis.
               </span>
             </div>
@@ -255,45 +259,45 @@ export default function AddWalletModal({ isOpen, onClose, onSuccess }: AddWallet
           {/* Account Number for Bank / E-Wallet */}
           {(selectedType === 'BANK' || selectedType === 'EWALLET') && (
             <div>
-              <label className="text-[11px] font-bold text-on-surface block mb-1">Nomor Rekening / HP (Opsional):</label>
+              <label className="text-xs font-semibold text-text-primary block mb-1">Nomor Rekening / HP (Opsional):</label>
               <input
                 type="text"
                 value={accountNo}
                 onChange={(e) => setAccountNo(e.target.value)}
                 placeholder="0812xxxx atau 14000xxxxx"
-                className="w-full px-3 py-2 bg-surface border border-outline/30 rounded-xl text-xs text-on-surface"
+                className="w-full px-3 py-2 bg-surface-base border border-border-subtle rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white transition-all"
               />
             </div>
           )}
 
           {/* Opening Balance */}
           <div>
-            <label className="text-[11px] font-bold text-on-surface block mb-1">Saldo Awal (IDR):</label>
+            <label className="text-xs font-semibold text-text-primary block mb-1">Saldo Awal (IDR):</label>
             <input
               type="number"
               min="0"
               value={openingBalance}
               onChange={(e) => setOpeningBalance(e.target.value)}
               placeholder="0"
-              className="w-full px-3 py-2 bg-surface border border-outline/30 rounded-xl text-xs font-mono font-bold text-on-surface"
+              className="w-full px-3 py-2 bg-surface-base border border-border-subtle rounded-xl text-xs tabular-nums font-bold text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white transition-all"
             />
             {openingBalance && (
-              <span className="text-[10px] text-primary-container font-semibold mt-1 block">
+              <span className="text-[10px] text-text-secondary font-medium mt-1 block tabular-nums">
                 {formatRupiah(parseInt(openingBalance, 10) || 0)}
               </span>
             )}
           </div>
 
           {/* Security Reassurance */}
-          <div className="bg-surface-container-low p-3 rounded-xl flex items-center gap-2 text-[10px] text-on-surface-variant">
-            <ShieldCheck className="w-4 h-4 text-primary-container shrink-0" />
-            <span>Rupia tidak pernah meminta PIN kartu, password ATM, atau OTP Anda.</span>
+          <div className="bg-surface-base border border-border-subtle p-3 rounded-xl flex items-center gap-2 text-xs text-text-secondary">
+            <ShieldCheck className="w-4 h-4 text-primary-forest shrink-0" />
+            <span>Rupia tidak pernah meminta PIN kartu, password perbankan, atau kode OTP.</span>
           </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-primary-container hover:bg-primary text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-3 bg-primary-forest hover:bg-primary-deep text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
           >
             {isSubmitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             <span>Simpan Dompet Baru</span>

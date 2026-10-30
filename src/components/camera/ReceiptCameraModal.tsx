@@ -419,22 +419,25 @@ export default function ReceiptCameraModal({
 
       {/* 4. VERIFY & EDIT REVIEW SCREEN */}
       {step === 'REVIEW' && (
-        <div className="w-full h-full flex flex-col bg-surface text-on-surface overflow-y-auto">
+        <div className="w-full h-full flex flex-col bg-white text-text-primary overflow-y-auto">
           {/* Header */}
-          <div className="p-4 border-b border-surface-variant/40 flex items-center justify-between sticky top-0 bg-surface/90 backdrop-blur-md z-10">
-            <h3 className="font-bold text-base text-on-surface">Periksa Hasil Pindai Nota</h3>
-            <button onClick={onClose} className="text-outline hover:text-on-surface">
+          <div className="p-4 sm:p-5 border-b border-border-subtle flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-10">
+            <div>
+              <h3 className="font-semibold text-sm sm:text-base text-text-primary">Periksa Hasil Pindai Nota</h3>
+              <p className="text-xs text-text-secondary">Verifikasi rincian sebelum disimpan ke transaksi</p>
+            </div>
+            <button onClick={onClose} className="text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-base">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-4 space-y-4 flex-1">
+          <div className="p-4 sm:p-5 space-y-4 flex-1">
             {/* Discrepancy Alert Banner */}
             {parsedResult?.hasDiscrepancy && (
-              <div className="bg-tertiary-fixed/40 border border-tertiary/30 rounded-xl p-3 flex items-start gap-2.5 text-xs text-on-tertiary-fixed">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-tertiary mt-0.5" />
+              <div className="bg-attention/10 border border-attention/30 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-attention">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-attention mt-0.5" />
                 <div>
-                  <span className="font-bold block">Peringatan Selisih Hitung:</span>
+                  <span className="font-semibold block">Peringatan Selisih Hitung:</span>
                   {parsedResult.discrepancyMessage}
                 </div>
               </div>
@@ -442,33 +445,33 @@ export default function ReceiptCameraModal({
 
             {/* Merchant Name */}
             <div>
-              <label className="text-xs text-on-surface-variant block mb-1">Nama Toko / Merchant</label>
+              <label className="text-xs font-medium text-text-secondary block mb-1.5">Nama Toko / Merchant</label>
               <input
                 type="text"
                 value={merchantName}
                 onChange={(e) => setMerchantName(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary-container font-medium"
+                className="w-full bg-surface-base border border-border-subtle rounded-xl px-3.5 py-2.5 text-sm text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white font-medium transition-all"
               />
             </div>
 
             {/* Total Amount */}
             <div>
-              <label className="text-xs text-on-surface-variant block mb-1">Total Belanja (IDR)</label>
+              <label className="text-xs font-medium text-text-secondary block mb-1.5">Total Belanja (IDR)</label>
               <input
                 type="number"
                 value={totalAmount || ''}
                 onChange={(e) => setTotalAmount(parseInt(e.target.value, 10) || 0)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2.5 text-lg font-bold text-primary-container focus:outline-none focus:border-primary-container font-mono"
+                className="w-full bg-surface-base border border-border-subtle rounded-xl px-3.5 py-2.5 text-lg font-bold text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white tabular-nums transition-all"
               />
             </div>
 
             {/* Wallet Selection */}
             <div>
-              <label className="text-xs text-on-surface-variant block mb-1">Bayar Menggunakan Dompet</label>
+              <label className="text-xs font-medium text-text-secondary block mb-1.5">Bayar Menggunakan Dompet</label>
               <select
                 value={selectedWalletId}
                 onChange={(e) => setSelectedWalletId(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                className="w-full bg-surface-base border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs font-medium text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white transition-all"
               >
                 {wallets.map((w) => (
                   <option key={w.id} value={w.id}>
@@ -480,11 +483,11 @@ export default function ReceiptCameraModal({
 
             {/* Category Selection */}
             <div>
-              <label className="text-xs text-on-surface-variant block mb-1">Kategori Pengeluaran</label>
+              <label className="text-xs font-medium text-text-secondary block mb-1.5">Kategori Pengeluaran</label>
               <select
                 value={selectedCategoryId}
                 onChange={(e) => setSelectedCategoryId(e.target.value)}
-                className="w-full bg-surface-container-lowest border border-outline/20 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary-container"
+                className="w-full bg-surface-base border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs font-medium text-text-primary focus:outline-none focus:border-primary-forest focus:bg-white transition-all"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -497,19 +500,19 @@ export default function ReceiptCameraModal({
             {/* Itemized Breakdown List */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-on-surface">Rincian Barang Terdeteksi ({lineItems.length})</label>
+                <label className="text-xs font-semibold text-text-primary">Rincian Barang Terdeteksi ({lineItems.length})</label>
               </div>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {lineItems.length === 0 ? (
-                  <p className="text-xs text-outline italic">Tidak ada rincian item terdeteksi terpisah.</p>
+                  <p className="text-xs text-text-secondary italic">Tidak ada rincian item terdeteksi terpisah.</p>
                 ) : (
                   lineItems.map((item, idx) => (
                     <div
                       key={idx}
-                      className="bg-surface-container-lowest p-2.5 rounded-xl border border-surface-variant/30 flex items-center justify-between text-xs shadow-xs"
+                      className="bg-surface-base p-3 rounded-xl border border-border-subtle flex items-center justify-between text-xs"
                     >
-                      <span className="font-medium text-on-surface truncate max-w-[180px]">{item.name}</span>
-                      <span className="font-mono text-primary-container font-semibold">{formatRupiah(item.totalPrice)}</span>
+                      <span className="font-medium text-text-primary truncate max-w-[180px]">{item.name}</span>
+                      <span className="tabular-nums text-text-primary font-semibold">{formatRupiah(item.totalPrice)}</span>
                     </div>
                   ))
                 )}
@@ -518,17 +521,17 @@ export default function ReceiptCameraModal({
           </div>
 
           {/* Action Confirm Button */}
-          <div className="p-4 bg-surface-container-lowest border-t border-surface-variant/30 flex gap-2">
+          <div className="p-4 sm:p-5 bg-white border-t border-border-subtle flex gap-2">
             <button
               onClick={() => setStep('PREVIEW')}
-              className="py-3 px-4 rounded-xl bg-surface-container-high text-on-surface-variant text-xs font-semibold hover:text-on-surface transition-colors"
+              className="py-3 px-4 rounded-xl bg-surface-base border border-border-subtle text-text-secondary text-xs font-semibold hover:text-text-primary transition-colors"
             >
               Kembali
             </button>
             <button
               onClick={handleSaveVerified}
               disabled={isSubmitting}
-              className="flex-1 py-3 rounded-xl bg-primary-container hover:bg-primary text-white font-bold text-sm flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 transition-colors"
+              className="flex-1 py-3 rounded-xl bg-primary-forest hover:bg-primary-deep text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 transition-colors"
             >
               {isSubmitting ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />

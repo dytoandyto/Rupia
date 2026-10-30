@@ -99,12 +99,12 @@ export default function InstallPwaModal({ forceOpen = false, onClose }: InstallP
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-surface-container-lowest border border-surface-variant/40 rounded-3xl p-6 shadow-2xl space-y-5 relative">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="w-full max-w-sm bg-white border border-border-subtle rounded-3xl p-6 shadow-2xl space-y-5 relative">
         {/* Close Button */}
         <button
           onClick={handleDismiss}
-          className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-variant flex items-center justify-center text-on-surface-variant absolute top-4 right-4 transition-colors"
+          className="w-8 h-8 rounded-full bg-surface-base hover:bg-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary absolute top-4 right-4 transition-colors"
           aria-label="Tutup"
         >
           <X className="w-4 h-4" />
@@ -112,65 +112,63 @@ export default function InstallPwaModal({ forceOpen = false, onClose }: InstallP
 
         {/* Icon & Title */}
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center shadow-md">
-            <span className="material-symbols-outlined text-[26px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              account_balance_wallet
-            </span>
+          <div className="w-12 h-12 rounded-2xl bg-primary-forest text-white flex items-center justify-center shadow-xs">
+            <Smartphone className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-extrabold text-base text-on-surface">Pasang Aplikasi Rupia</h3>
-            <p className="text-xs text-on-surface-variant">Akses cepat langsung dari layar utama</p>
+            <h3 className="font-semibold text-base text-text-primary">Pasang Aplikasi Rupia</h3>
+            <p className="text-xs text-text-secondary">Akses cepat &amp; hemat kuota dari layar utama</p>
           </div>
         </div>
 
         {/* Benefits */}
-        <div className="space-y-2 text-xs text-on-surface-variant bg-surface-container-low/60 rounded-2xl p-3.5">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-            <span>Pencatatan lebih cepat &amp; layar penuh tanpa URL bar</span>
+        <div className="space-y-2 text-xs text-text-secondary bg-surface-base rounded-2xl p-4 border border-border-subtle">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-primary-forest shrink-0" />
+            <span>Pencatatan cepat satu ketukan tanpa address bar</span>
           </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-            <span>Mode offline untuk mencatat saat tidak ada sinyal</span>
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-primary-forest shrink-0" />
+            <span>Bekerja offline saat sinyal minim atau dalam perjalanan</span>
           </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-            <span>Aman, ringan, dan tidak memakan memori ponsel</span>
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-primary-forest shrink-0" />
+            <span>Aman, privat, dan tanpa beban memori perangkat</span>
           </div>
         </div>
 
         {/* Platform Specific Instructions */}
         {isIos ? (
           <div className="space-y-3 pt-1">
-            <p className="text-xs font-bold text-on-surface">Panduan Pemasangan Safari iOS:</p>
-            <div className="space-y-2 text-xs text-on-surface-variant">
+            <p className="text-xs font-semibold text-text-primary">Panduan Pemasangan Safari iOS:</p>
+            <div className="space-y-2.5 text-xs text-text-secondary">
               <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-primary-container/20 text-primary font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="w-5 h-5 rounded-full bg-primary-light text-primary-forest font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                   1
                 </span>
                 <span>
-                  Ketuk tombol <strong>Bagikan</strong> <Share2 className="w-3.5 h-3.5 inline mx-1 text-primary" /> di bilah bawah Safari.
+                  Ketuk tombol <strong>Bagikan</strong> <Share2 className="w-3.5 h-3.5 inline mx-1 text-primary-forest" /> di bilah navigasi Safari.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-primary-container/20 text-primary font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="w-5 h-5 rounded-full bg-primary-light text-primary-forest font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                   2
                 </span>
                 <span>
-                  Gulir ke bawah dan pilih <strong>&quot;Tambah ke Layar Utama&quot;</strong>{' '}
-                  <PlusSquare className="w-3.5 h-3.5 inline mx-1 text-primary" />.
+                  Gulir ke bawah dan ketuk <strong>&quot;Tambah ke Layar Utama&quot;</strong>{' '}
+                  <PlusSquare className="w-3.5 h-3.5 inline mx-1 text-primary-forest" />.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-primary-container/20 text-primary font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="w-5 h-5 rounded-full bg-primary-light text-primary-forest font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                   3
                 </span>
-                <span>Ketuk <strong>&quot;Tambah&quot;</strong> di pojok kanan atas layar. Selesai!</span>
+                <span>Ketuk <strong>&quot;Tambah&quot;</strong> di pojok kanan atas. Selesai!</span>
               </div>
             </div>
             <button
               onClick={handleDismiss}
-              className="w-full mt-2 py-2.5 bg-surface-container hover:bg-surface-variant text-on-surface rounded-xl text-xs font-bold transition-colors"
+              className="w-full mt-2 py-2.5 bg-surface-base hover:bg-border-subtle text-text-primary rounded-xl text-xs font-semibold border border-border-subtle transition-colors"
             >
               Saya Mengerti
             </button>
@@ -179,27 +177,27 @@ export default function InstallPwaModal({ forceOpen = false, onClose }: InstallP
           <div className="space-y-2 pt-1">
             <button
               onClick={handleInstallClick}
-              className="w-full py-3 bg-primary-container hover:bg-primary text-on-primary rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+              className="w-full py-3 bg-primary-forest hover:bg-primary-deep text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98]"
             >
               <Download className="w-4 h-4" />
-              <span>Pasang Sekarang ke Ponsel</span>
+              <span>Pasang Sekarang ke Perangkat</span>
             </button>
             <button
               onClick={handleDismiss}
-              className="w-full py-2 text-on-surface-variant hover:text-on-surface text-xs font-medium"
+              className="w-full py-2 text-text-secondary hover:text-text-primary text-xs font-medium"
             >
               Nanti Saja
             </button>
           </div>
         ) : (
           <div className="space-y-2 pt-1">
-            <p className="text-xs text-on-surface-variant text-center">
+            <p className="text-xs text-text-secondary text-center">
               Untuk memasang, buka menu browser Anda (titik tiga) lalu pilih <strong>&quot;Install App&quot;</strong> atau{' '}
               <strong>&quot;Tambahkan ke Layar Utama&quot;</strong>.
             </p>
             <button
               onClick={handleDismiss}
-              className="w-full py-2.5 bg-surface-container hover:bg-surface-variant text-on-surface rounded-xl text-xs font-bold transition-colors"
+              className="w-full py-2.5 bg-surface-base hover:bg-border-subtle text-text-primary rounded-xl text-xs font-semibold border border-border-subtle transition-colors"
             >
               Tutup
             </button>

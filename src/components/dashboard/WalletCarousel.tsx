@@ -2,7 +2,22 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import {
+  Landmark,
+  Smartphone,
+  CreditCard,
+  Banknote,
+  PiggyBank,
+  TrendingUp,
+  Plus,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  ChevronRight,
+  ShieldCheck,
+} from 'lucide-react';
 import { formatRupiah } from '@/lib/formatters';
+import { useBalancePrivacy } from '@/lib/privacy-context';
 
 interface WalletItem {
   id: string;
@@ -14,6 +29,7 @@ interface WalletItem {
   recordedBalance: number;
   lastVerifiedBalance?: number | null;
   lastReconciledAt?: string | null;
+  issuer?: string | null;
 }
 
 interface WalletCarouselProps {
@@ -22,75 +38,62 @@ interface WalletCarouselProps {
 }
 
 export default function WalletCarousel({ wallets, onWalletReconciled }: WalletCarouselProps) {
+  const { isBalanceHidden } = useBalancePrivacy();
   const [reconcilingWallet, setReconcilingWallet] = useState<WalletItem | null>(null);
   const [actualBalanceInput, setActualBalanceInput] = useState('');
   const [createAdjustment, setCreateAdjustment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getWalletBadge = (w: WalletItem) => {
+  const getWalletVisual = (w: WalletItem) => {
     switch (w.type) {
       case 'BANK':
         return {
-          icon: 'account_balance',
-          initials: w.name.includes('Mandiri') ? 'BM' : w.name.includes('BCA') ? 'BCA' : 'BK',
-          tag: 'Utama',
-          subtext: 'Sinkron 1j lalu',
-          iconBg: 'bg-surface-container-high text-primary',
-          tagClass: 'text-on-surface-variant',
+          icon: Landmark,
+          tag: 'Bank',
+          badgeClass: 'bg-primary-light text-primary border-primary/20',
+          issuerText: w.accountNo ? `•••• ${w.accountNo.slice(-4)}` : 'Rekening Utama',
         };
       case 'EWALLET':
         return {
-          icon: 'account_balance_wallet',
-          initials: 'E-W',
-          tag: 'Aktif',
-          subtext: 'Dompet Harian',
-          iconBg: 'bg-primary-container/15 text-primary-container',
-          tagClass: 'text-primary font-semibold',
+          icon: Smartphone,
+          tag: 'E-Wallet',
+          badgeClass: 'bg-surface-container text-text-primary border-border-subtle',
+          issuerText: 'Dompet Digital',
         };
       case 'EMONEY':
         return {
-          icon: 'credit_card',
-          initials: 'E-M',
-          tag: 'Kartu',
-          subtext: 'Uang Elektronik',
-          iconBg: 'bg-emerald-500/15 text-primary',
-          tagClass: 'text-primary font-semibold',
+          icon: CreditCard,
+          tag: 'E-Money',
+          badgeClass: 'bg-[#EBF5FB] text-[#2471A3] border-[#AED6F1]',
+          issuerText: w.issuer || 'Kartu Prabayar',
         };
       case 'CASH':
         return {
-          icon: 'payments',
-          initials: 'CASH',
-          tag: 'Manual',
-          subtext: 'Fisik di Dompet',
-          iconBg: 'bg-surface-container text-secondary',
-          tagClass: 'text-on-surface-variant',
+          icon: Banknote,
+          tag: 'Kas Tunai',
+          badgeClass: 'bg-surface-container text-text-secondary border-border-subtle',
+          issuerText: 'Uang Fisik',
         };
       case 'SAVINGS':
         return {
-          icon: 'savings',
-          initials: 'TAB',
-          tag: 'Simpanan',
-          subtext: 'Tabungan Khusus',
-          iconBg: 'bg-purple-500/15 text-purple-700',
-          tagClass: 'text-purple-700 font-semibold',
+          icon: PiggyBank,
+          tag: 'Tabungan',
+          badgeClass: 'bg-[#F4ECF7] text-[#7D3C98] border-[#D7BDE2]',
+          issuerText: 'Dana Simpanan',
         };
       case 'INVESTMENT':
         return {
-          icon: 'trending_up',
-          initials: 'INV',
+          icon: TrendingUp,
           tag: 'Investasi',
-          subtext: 'Tabungan & Reksadana',
-          iconBg: 'bg-tertiary-fixed/30 text-tertiary',
-          tagClass: 'text-tertiary font-semibold',
+          badgeClass: 'bg-tertiary-container text-attention border-tertiary-container',
+          issuerText: 'Portofolio',
         };
       default:
         return {
-          icon: 'wallet',
-          initials: 'W',
-          tag: 'Dompet',
-          subtext: 'Rekening Tambahan',
-          iconBg: 'bg-surface-container text-primary',
-          tagClass: 'text-on-surface-variant',
+          icon: CreditCard,
+          tag: 'Akun',
+          badgeClass: 'bg-surface-container text-text-secondary border-border-subtle',
+          issuerText: 'Dompet',
         };
     }
   };
@@ -106,39 +109,50 @@ export default function WalletCarousel({ wallets, onWalletReconciled }: WalletCa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           actualBalance: actual,
-          createAdjustment,
+          createAdjustmentTransaction: createAdjustment,
         }),
       });
 
       if (res.ok) {
         setReconcilingWallet(null);
-        setActualBalanceInput('');
         onWalletReconciled();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Gagal merekonsiliasi saldo');
       }
-    } catch (err) {
-      console.error('[RECONCILE SUBMIT ERROR]', err);
+    } catch {
+      alert('Terjadi kesalahan jaringan');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col space-y-2.5">
+    <div className="flex flex-col space-y-3">
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[16px] font-bold text-on-surface">Dompet &amp; Rekening</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-text-primary tracking-tight">
+            Dompet &amp; Rekening Terdaftar
+          </h2>
+          <span className="text-[11px] text-text-secondary font-medium">
+            ({wallets.length})
+          </span>
+        </div>
         <Link
           href="/dompet"
-          className="text-[12px] font-semibold text-primary hover:underline transition-all"
+          className="text-xs font-medium text-primary hover:text-primary-dark inline-flex items-center gap-0.5 transition-colors"
         >
-          Kelola ({wallets.length})
+          <span>Kelola Semua</span>
+          <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
-      {/* Horizontal Swipe Carousel */}
-      <div className="flex gap-3 overflow-x-auto pb-1 -mx-margin px-margin scrollbar-none snap-x snap-mandatory">
+      {/* Responsive Cards Row (Horizontal swipe on phone, multi-card wrap on desktop) */}
+      <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-x-auto pb-1 -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-none snap-x snap-mandatory">
         {wallets.map((w) => {
-          const badge = getWalletBadge(w);
+          const visual = getWalletVisual(w);
+          const Icon = visual.icon;
 
           return (
             <div
@@ -147,132 +161,110 @@ export default function WalletCarousel({ wallets, onWalletReconciled }: WalletCa
                 setReconcilingWallet(w);
                 setActualBalanceInput(String(w.recordedBalance));
               }}
-              className="min-w-[190px] p-3.5 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between shrink-0 snap-start border border-surface-variant/30 hover:shadow-md transition-shadow cursor-pointer group"
+              className="min-w-[210px] sm:min-w-0 p-4 rounded-xl bg-surface-card border border-border-subtle shadow-xs flex flex-col justify-between shrink-0 snap-start hover:border-primary/40 transition-colors cursor-pointer group"
             >
-              {/* Top Row */}
+              {/* Card Top: Visual Icon + Badge */}
               <div className="flex items-center justify-between mb-3">
-                <div
-                  className={`w-8 h-8 rounded-lg ${badge.iconBg} flex items-center justify-center font-bold text-xs`}
-                >
-                  {w.type === 'BANK' ? (
-                    badge.initials
-                  ) : (
-                    <span className="material-symbols-outlined text-[18px]">
-                      {badge.icon}
-                    </span>
-                  )}
+                <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-text-primary border border-border-subtle group-hover:bg-primary-light group-hover:text-primary transition-colors">
+                  <Icon className="w-4 h-4" />
                 </div>
-                <span className={`text-[10px] ${badge.tagClass}`}>{badge.tag}</span>
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${visual.badgeClass}`}>
+                  {visual.tag}
+                </span>
               </div>
 
-              {/* Bottom Info */}
+              {/* Card Bottom: Balance & Metadata */}
               <div>
-                <span className="text-[12px] text-on-surface-variant block truncate">
+                <span className="text-xs font-medium text-text-secondary block truncate">
                   {w.name}
                 </span>
-                <span className="text-[15px] font-bold text-on-surface block mt-0.5">
-                  {formatRupiah(w.recordedBalance)}
+                <span className="text-base font-bold text-text-primary tabular-nums block mt-0.5">
+                  {formatRupiah(w.recordedBalance, isBalanceHidden)}
                 </span>
-                <span className="text-[10px] text-outline block mt-1">
-                  {badge.subtext}
-                </span>
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border-subtle/50 text-[10px] text-text-secondary">
+                  <span className="truncate">{visual.issuerText}</span>
+                  <span className="text-primary font-medium hover:underline">Rekonsiliasi</span>
+                </div>
               </div>
             </div>
           );
         })}
 
-        {/* Add Account Button Tile */}
+        {/* Add Account Tile */}
         <Link
           href="/dompet"
-          className="min-w-[130px] p-3.5 rounded-2xl bg-surface-container-low hover:bg-surface-container text-primary flex flex-col items-center justify-center gap-2 shrink-0 snap-start transition-colors border border-dashed border-primary/30"
+          className="min-w-[140px] sm:min-w-0 p-4 rounded-xl bg-surface-card hover:bg-surface-container-low text-text-secondary hover:text-primary flex flex-col items-center justify-center gap-2 shrink-0 snap-start transition-colors border border-dashed border-border-subtle"
         >
-          <div className="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-[20px]">add</span>
+          <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-text-primary shadow-xs">
+            <Plus className="w-4 h-4" />
           </div>
-          <span className="text-[10px] font-semibold text-primary">Tambah Akun</span>
+          <span className="text-xs font-medium">Tambah Akun</span>
         </Link>
       </div>
 
       {/* Balance Reconciliation Modal */}
       {reconcilingWallet && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end justify-center p-0 animate-in fade-in">
-          <div className="w-full max-w-md bg-surface-container-lowest rounded-t-3xl p-5 space-y-4 shadow-2xl border-t border-surface-variant">
-            <div className="flex items-center justify-between border-b border-surface-variant pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-sm bg-surface-card rounded-2xl p-5 space-y-4 shadow-lg border border-border-subtle">
+            <div className="flex items-center justify-between border-b border-border-subtle pb-3">
               <div>
-                <h3 className="text-[16px] font-bold text-on-surface">Rekonsiliasi Saldo</h3>
-                <p className="text-[12px] text-on-surface-variant">{reconcilingWallet.name}</p>
+                <h3 className="text-sm font-bold text-text-primary">Rekonsiliasi Saldo</h3>
+                <p className="text-xs text-text-secondary">{reconcilingWallet.name}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setReconcilingWallet(null)}
-                className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface"
+                className="w-7 h-7 rounded-lg text-text-secondary hover:text-text-primary flex items-center justify-center"
               >
-                <span className="material-symbols-outlined text-[18px]">close</span>
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="bg-surface-container-low rounded-xl p-3 text-[12px] space-y-1.5 border border-surface-variant/40">
+            <div className="bg-surface-container-low rounded-xl p-3 text-xs space-y-1.5 border border-border-subtle">
               <div className="flex justify-between">
-                <span className="text-on-surface-variant">Saldo Tercatat Rupia:</span>
-                <strong className="font-mono text-on-surface">
-                  {formatRupiah(reconcilingWallet.recordedBalance)}
+                <span className="text-text-secondary">Saldo Tercatat di Sistem:</span>
+                <strong className="font-semibold tabular-nums text-text-primary">
+                  {formatRupiah(reconcilingWallet.recordedBalance, isBalanceHidden)}
                 </strong>
               </div>
+              {reconcilingWallet.lastVerifiedBalance !== undefined && (
+                <div className="flex justify-between text-[11px] text-text-secondary">
+                  <span>Verifikasi Terakhir:</span>
+                  <span>{reconcilingWallet.lastReconciledAt ? 'Ada catatan' : 'Belum pernah'}</span>
+                </div>
+              )}
             </div>
 
-            <div>
-              <label className="text-[12px] font-semibold text-on-surface block mb-1">
-                Saldo Riil Fisik / Mutasi Bank Saat Ini (Rp):
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-text-primary block">
+                Saldo Nyata Fisik / Rekening Saat Ini (IDR)
               </label>
               <input
-                type="text"
+                type="number"
                 value={actualBalanceInput}
                 onChange={(e) => setActualBalanceInput(e.target.value)}
-                placeholder="Misal 8.450.000"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-outline/40 text-[16px] font-mono font-bold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container"
+                placeholder="Contoh: 1500000"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border-subtle bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-text-primary tabular-nums"
               />
             </div>
 
-            {(() => {
-              const actual = parseInt(actualBalanceInput.replace(/[^0-9]/g, ''), 10) || 0;
-              const diff = actual - reconcilingWallet.recordedBalance;
-
-              if (diff !== 0 && actualBalanceInput !== '') {
-                return (
-                  <div
-                    className={`p-3 rounded-xl text-[12px] space-y-2 ${
-                      diff < 0
-                        ? 'bg-error-container/40 text-on-error-container border border-error/30'
-                        : 'bg-primary-container/15 text-primary border border-primary/30'
-                    }`}
-                  >
-                    <div className="flex justify-between font-bold">
-                      <span>Selisih Rekonsiliasi:</span>
-                      <span>{formatRupiah(Math.abs(diff))} ({diff < 0 ? 'Defisit' : 'Surplus'})</span>
-                    </div>
-
-                    <label className="flex items-center gap-2 cursor-pointer mt-1">
-                      <input
-                        type="checkbox"
-                        checked={createAdjustment}
-                        onChange={(e) => setCreateAdjustment(e.target.checked)}
-                        className="rounded text-primary focus:ring-primary w-4 h-4"
-                      />
-                      <span className="text-[11px] font-medium leading-tight">
-                        Buat transaksi penyesuaian otomatis agar saldo sinkron
-                      </span>
-                    </label>
-                  </div>
-                );
-              }
-              return null;
-            })()}
+            <label className="flex items-start gap-2.5 cursor-pointer text-xs text-text-primary">
+              <input
+                type="checkbox"
+                checked={createAdjustment}
+                onChange={(e) => setCreateAdjustment(e.target.checked)}
+                className="mt-0.5 rounded border-border-subtle text-primary focus:ring-primary/20"
+              />
+              <span className="leading-snug">
+                Buat transaksi <strong>Penyesuaian (Adjustment)</strong> otomatis jika ada selisih.
+              </span>
+            </label>
 
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setReconcilingWallet(null)}
-                className="flex-1 py-2.5 rounded-xl border border-outline/40 text-[14px] font-semibold text-on-surface hover:bg-surface-container transition-colors"
+                className="flex-1 py-2 rounded-xl border border-border-subtle text-text-secondary text-xs font-medium hover:bg-surface-container-low"
               >
                 Batal
               </button>
@@ -280,9 +272,9 @@ export default function WalletCarousel({ wallets, onWalletReconciled }: WalletCa
                 type="button"
                 onClick={handleReconcileSubmit}
                 disabled={isSubmitting}
-                className="flex-1 py-2.5 rounded-xl bg-primary-container text-on-primary text-[14px] font-semibold hover:bg-primary transition-all active:scale-95 disabled:opacity-50"
+                className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-medium hover:bg-primary-dark transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? 'Menyimpan...' : 'Konfirmasi Saldo'}
+                {isSubmitting ? 'Menyimpan...' : 'Simpan Rekonsiliasi'}
               </button>
             </div>
           </div>
