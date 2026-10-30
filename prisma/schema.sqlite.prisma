@@ -1,0 +1,406 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String                  @id @default(uuid())
+  email                   String                  @unique
+  passwordHash            String
+  name                    String
+  avatarUrl               String?
+  currency                String                  @default("IDR")
+  timezone                String                  @default("Asia/Jakarta")
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  sessions                Session[]
+  wallets                 Wallet[]
+  transactions            Transaction[]
+  categories              Category[]
+  transfers               Transfer[]
+  budgets                 Budget[]
+  obligations             FinancialObligation[]
+  receipts                Receipt[]
+  importBatches           ImportBatch[]
+  goals                   FinancialGoal[]
+  dailyCheckIns           DailyCheckIn[]
+  notificationPreference  NotificationPreference?
+  notifications           Notification[]
+  aiConversations         AIConversation[]
+  auditLogs               AuditLog[]
+
+  @@index([email])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Wallet {
+  id                  String       @id @default(uuid())
+  userId              String
+  name                String       // e.g. "Mandiri", "GoPay", "Dompet Tunai"
+  type                String       @default("BANK") // BANK, EWALLET, CASH, INVESTMENT, OTHER
+  accountNo           String?
+  color               String       @default("#10b981")
+  icon                String       @default("Wallet")
+  openingBalance      BigInt       @default(0) // in IDR
+  recordedBalance     BigInt       @default(0) // calculated posted balance
+  lastVerifiedBalance BigInt?      // actual balance reported by user
+  lastReconciledAt    DateTime?
+  isArchived          Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions        Transaction[]
+  outgoingTransfers   Transfer[]   @relation("SourceWallet")
+  incomingTransfers   Transfer[]   @relation("DestinationWallet")
+  feeTransfers        Transfer[]   @relation("FeeWallet")
+  obligations         FinancialObligation[]
+
+  @@index([userId])
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  userId       String?       // null = system default
+  name         String
+  icon         String        @default("Tag")
+  color        String        @default("#64748b")
+  type         String        @default("EXPENSE") // EXPENSE, INCOME
+  isDefault    Boolean       @default(false)
+  isSystem     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  allocations  BudgetAllocation[]
+  obligations  FinancialObligation[]
+
+  @@index([userId])
+}
+
+model Transaction {
+  id             String          @id @default(uuid())
+  userId         String
+  walletId       String
+  categoryId     String?
+  type           String          @default("EXPENSE") // EXPENSE, INCOME, TRANSFER
+  amount         BigInt          // positive IDR integer
+  date           DateTime        @default(now())
+  description    String
+  merchant       String?
+  notes          String?
+  receiptId      String?         @unique
+  transferId     String?
+  isVerified     Boolean         @default(true)
+  isVoided       Boolean         @default(false)
+  voidReason     String?
+  idempotencyKey String?         @unique
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet         Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  receipt        Receipt?        @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+  transfer       Transfer?       @relation(fields: [transferId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([walletId])
+  @@index([categoryId])
+  @@index([date])
+}
+
+model Transfer {
+  id                    String        @id @default(uuid())
+  userId                String
+  sourceWalletId        String
+  destinationWalletId   String
+  amount                BigInt        // Amount transferred
+  fee                   BigInt        @default(0) // Transfer fee
+  feeWalletId           String?
+  date                  DateTime      @default(now())
+  notes                 String?
+  createdAt             DateTime      @default(now())
+
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceWallet          Wallet        @relation("SourceWallet", fields: [sourceWalletId], references: [id], onDelete: Cascade)
+  destinationWallet     Wallet        @relation("DestinationWallet", fields: [destinationWalletId], references: [id], onDelete: Cascade)
+  feeWallet             Wallet?       @relation("FeeWallet", fields: [feeWalletId], references: [id], onDelete: SetNull)
+  transactions          Transaction[]
+
+  @@index([userId])
+  @@index([sourceWalletId])
+  @@index([destinationWalletId])
+}
+
+model Budget {
+  id                String             @id @default(uuid())
+  userId            String
+  name              String             // e.g. "Anggaran Bulanan"
+  period            String             @default("MONTHLY") // WEEKLY, MONTHLY, CUSTOM
+  startDate         DateTime
+  endDate           DateTime
+  totalLimit        BigInt
+  alertThreshold80  Boolean            @default(true)
+  alertThreshold100 Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations       BudgetAllocation[]
+
+  @@index([userId])
+}
+
+model BudgetAllocation {
+  id                  String    @id @default(uuid())
+  budgetId            String
+  categoryId          String
+  allocatedPercentage Float?    // e.g. 50% for Needs, 30% for Wants, 20% for Savings
+  allocatedAmount     BigInt    // In IDR
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  budget              Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category            Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([budgetId, categoryId])
+  @@index([budgetId])
+}
+
+model FinancialObligation {
+  id          String         @id @default(uuid())
+  userId      String
+  name        String         // e.g. "Tagihan Listrik", "Cicilan Motor"
+  amount      BigInt
+  dueDate     DateTime
+  isPaid      Boolean        @default(false)
+  recurrence  String         @default("MONTHLY") // NONE, WEEKLY, MONTHLY, YEARLY
+  categoryId  String?
+  walletId    String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  wallet      Wallet?        @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([dueDate])
+}
+
+model Receipt {
+  id              String            @id @default(uuid())
+  userId          String
+  imageUrl        String
+  ocrRawText      String?
+  ocrParsedJson   String?           // JSON string of detected items
+  merchantName    String?
+  totalAmount     BigInt?
+  taxAmount       BigInt?
+  discountAmount  BigInt?
+  transactionDate DateTime?
+  confidence      Float?
+  status          String            @default("PENDING") // PENDING, PROCESSED, REVIEWED, FAILED
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction     Transaction?
+  lineItems       ReceiptLineItem[]
+
+  @@index([userId])
+}
+
+model ReceiptLineItem {
+  id         String   @id @default(uuid())
+  receiptId  String
+  name       String
+  quantity   Float    @default(1)
+  unitPrice  BigInt
+  totalPrice BigInt
+  confidence Float?
+  createdAt  DateTime @default(now())
+
+  receipt    Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  @@index([receiptId])
+}
+
+model ImportBatch {
+  id               String                        @id @default(uuid())
+  userId           String
+  filename         String
+  totalRecords     Int                           @default(0)
+  importedRecords  Int                           @default(0)
+  duplicateRecords Int                           @default(0)
+  failedRecords    Int                           @default(0)
+  fileHash         String
+  createdAt        DateTime                      @default(now())
+
+  user             User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items            ImportedTransactionReference[]
+
+  @@index([userId])
+}
+
+model ImportedTransactionReference {
+  id            String      @id @default(uuid())
+  batchId       String
+  externalHash  String
+  rawData       String
+  status        String      @default("SUCCESS") // SUCCESS, DUPLICATE, FAILED
+  transactionId String?
+  createdAt     DateTime    @default(now())
+
+  batch         ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([externalHash])
+}
+
+model FinancialGoal {
+  id            String             @id @default(uuid())
+  userId        String
+  name          String             // e.g. "Dana Darurat 6 Bulan", "Beli Laptop"
+  targetAmount  BigInt
+  currentAmount BigInt             @default(0)
+  deadline      DateTime?
+  priority      String             @default("MEDIUM") // LOW, MEDIUM, HIGH
+  category      String?
+  isCompleted   Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contributions GoalContribution[]
+
+  @@index([userId])
+}
+
+model GoalContribution {
+  id            String        @id @default(uuid())
+  goalId        String
+  userId        String
+  amount        BigInt
+  date          DateTime      @default(now())
+  notes         String?
+  createdAt     DateTime      @default(now())
+
+  goal          FinancialGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([goalId])
+}
+
+model DailyCheckIn {
+  id               String   @id @default(uuid())
+  userId           String
+  date             DateTime @default(now())
+  hasIncome        Boolean  @default(false)
+  hasExpenses      Boolean  @default(false)
+  hasUnrecorded    Boolean  @default(false)
+  walletReconciled Boolean  @default(false)
+  note             String?
+  completedAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}
+
+model NotificationPreference {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  reminderTime     String   @default("20:30") // HH:mm in Asia/Jakarta
+  activeDays       String   @default("1,2,3,4,5,6,7") // Mon-Sun
+  quietHoursStart  String?  @default("22:00")
+  quietHoursEnd    String?  @default("07:00")
+  pushEnabled      Boolean  @default(true)
+  emailEnabled     Boolean  @default(false)
+  inAppEnabled     Boolean  @default(true)
+  lastNotifiedAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // DAILY_CHECKIN, BUDGET_ALERT, ATS_WARNING, SYSTEM
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model AIConversation {
+  id        String      @id @default(uuid())
+  userId    String
+  title     String      @default("Percakapan Finansial")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AIMessage[]
+
+  @@index([userId])
+}
+
+model AIMessage {
+  id              String         @id @default(uuid())
+  conversationId  String
+  role            String         // user, assistant, system
+  content         String
+  toolCallsJson   String?        // Structured tool call payload
+  toolResultsJson String?        // Structured tool results
+  createdAt       DateTime       @default(now())
+
+  conversation    AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String   // e.g. "CREATE_TRANSACTION", "TRANSFER", "RECONCILE"
+  entity      String   // "Transaction", "Wallet", "User"
+  entityId    String?
+  detailsJson String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
+

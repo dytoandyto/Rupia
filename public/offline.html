@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#005f40" />
+  <title>Rupia — Offline</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f1fcf5;
+      color: #141e1a;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #dae5de;
+      border-radius: 28px;
+      padding: 32px 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 10px 25px -5px rgba(0, 95, 64, 0.08);
+    }
+    .icon-badge {
+      width: 64px;
+      height: 64px;
+      background: #167a55;
+      color: #ffffff;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      font-size: 32px;
+      box-shadow: 0 8px 16px -4px rgba(22, 122, 85, 0.3);
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      color: #141e1a;
+    }
+    p {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #3f4943;
+      margin: 0 0 24px 0;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ffead2;
+      color: #724b00;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      background: #005f40;
+      color: #ffffff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      box-sizing: border-box;
+      transition: opacity 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .notice {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #6f7a72;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-badge">📶</div>
+    <div class="status-badge">Mode Offline Aktif</div>
+    <h1>Koneksi Terputus</h1>
+    <p>
+      Anda sedang tidak terhubung ke jaringan internet. Catatan dan transaksi Anda yang tersimpan di perangkat tetap aman.
+    </p>
+    <button class="btn" onclick="window.location.reload()">Coba Muat Ulang</button>
+    <div class="notice">
+      Data transaksi baru akan disinkronkan otomatis saat perangkat kembali online.
+    </div>
+  </div>
+</body>
+</html>
+
